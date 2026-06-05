@@ -79,8 +79,8 @@ export async function getSamples() {
  * @param {string} smiles SMILES string to predict.
  * @returns {Promise<object>} Prediction response payload.
  */
-export async function predictProperties(smiles) {
-  const { data } = await api.post('/api/properties/predict', { smiles });
+export async function predictProperties(smiles, options = {}) {
+  const { data } = await api.post('/api/properties/predict', { smiles }, { params: { mp: options.mp !== false } });
   return data;
 }
 
@@ -131,5 +131,78 @@ export async function runInverseDesign(targetProperty, targetValue, nCandidates)
     target_value: Number(targetValue),
     n_candidates: Number(nCandidates)
   });
+  return data;
+}
+
+/**
+ * Search Materials Project by formula.
+ * @param {string} formula Formula string.
+ * @param {boolean} includeElasticity Include elasticity lookups.
+ * @returns {Promise<object[]>} MP material summaries.
+ */
+export async function searchMPByFormula(formula, includeElasticity = false) {
+  const { data } = await api.post('/api/mp/search-formula', { formula, include_elasticity: includeElasticity });
+  return data;
+}
+
+/**
+ * Search Materials Project by element set.
+ * @param {string[]} elements Element symbols.
+ * @returns {Promise<object[]>} MP material summaries.
+ */
+export async function searchMPByElements(elements) {
+  const { data } = await api.post('/api/mp/search-elements', { elements });
+  return data;
+}
+
+/**
+ * Fetch a full Materials Project material detail.
+ * @param {string} materialId Materials Project material id.
+ * @returns {Promise<object>} Material detail.
+ */
+export async function getMPMaterial(materialId) {
+  const { data } = await api.get(`/api/mp/material/${materialId}`);
+  return data;
+}
+
+/**
+ * Enrich local ML predictions with Materials Project data.
+ * @param {string} smiles SMILES string.
+ * @param {object} mlPredictions Local prediction payload.
+ * @returns {Promise<object>} Reconciled prediction payload.
+ */
+export async function enrichPredictionWithMP(smiles, mlPredictions) {
+  const { data } = await api.post('/api/mp/enrich-prediction', {
+    smiles,
+    ml_predictions: mlPredictions
+  });
+  return data;
+}
+
+/**
+ * Fetch Materials Project connection status.
+ * @returns {Promise<object>} MP status payload.
+ */
+export async function getMPStatus() {
+  const { data } = await api.get('/api/mp/status');
+  return data;
+}
+
+/**
+ * Set and validate a Materials Project API key for this backend session.
+ * @param {string} apiKey Materials Project API key.
+ * @returns {Promise<object>} Validation result.
+ */
+export async function setMPApiKey(apiKey) {
+  const { data } = await api.post('/api/mp/set-key', { api_key: apiKey });
+  return data;
+}
+
+/**
+ * Clear the Materials Project cache.
+ * @returns {Promise<object>} Cache clear result.
+ */
+export async function clearMPCache() {
+  const { data } = await api.post('/api/mp/clear-cache');
   return data;
 }

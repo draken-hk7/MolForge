@@ -23,11 +23,13 @@ export function useProperties() {
         const comparison = await compareProperties(original, modified);
         store.setProperties(comparison.original);
         store.setModifiedProperties(comparison.modified);
+        store.setMpData(null);
         store.addToHistory({ smiles: modified, properties: comparison.modified, name: 'Modified prediction' });
         return comparison;
       }
-      const prediction = await predictProperties(original);
+      const prediction = await predictProperties(original, { mp: store.predictionSettings.autoEnrichPredictions });
       store.setProperties(prediction.properties);
+      store.setMpData(prediction.mp_data || null);
       store.addToHistory({ smiles: original, properties: prediction.properties, name: 'Property prediction' });
       return prediction;
     } catch (error) {
@@ -41,6 +43,7 @@ export function useProperties() {
   return {
     currentProperties: store.currentProperties,
     modifiedProperties: store.modifiedProperties,
+    mpData: store.mpData,
     isLoading: store.isLoading,
     error: store.error,
     predictActiveProperties

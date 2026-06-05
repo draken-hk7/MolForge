@@ -1,5 +1,6 @@
 import { Atom, FlaskConical, Github, Server } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import MPStatusBadge from '../MaterialsProject/MPStatusBadge';
 
 /**
  * Render the top navigation bar.
@@ -28,6 +29,7 @@ export default function Navbar() {
           >
             <Github size={14} /> Source
           </a>
+          <MPStatusBadge />
           <NavLink
             to="/inverse-design"
             className="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"

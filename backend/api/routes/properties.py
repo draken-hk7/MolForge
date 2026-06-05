@@ -7,6 +7,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from core.materials_project_client import MaterialsProjectClient
+from core.property_reconciler import PropertyReconciler
 from core.property_predictor import PropertyPredictor
 
 
@@ -38,8 +40,32 @@ def _predictor(request: Request) -> PropertyPredictor:
     return getattr(request.app.state, "property_predictor", PropertyPredictor())
 
 
+def _mp_client(request: Request) -> MaterialsProjectClient:
+    """Resolve the shared Materials Project client.
+
+    Args:
+        request: Incoming FastAPI request.
+
+    Returns:
+        A MaterialsProjectClient instance.
+    """
+    return getattr(request.app.state, "mp_client", MaterialsProjectClient())
+
+
+def _reconciler(request: Request) -> PropertyReconciler:
+    """Resolve the shared property reconciler.
+
+    Args:
+        request: Incoming FastAPI request.
+
+    Returns:
+        A PropertyReconciler instance.
+    """
+    return getattr(request.app.state, "property_reconciler", PropertyReconciler())
+
+
 @router.post("/predict")
-async def predict_properties(payload: PredictRequest, request: Request) -> dict[str, Any]:
+async def predict_properties(payload: PredictRequest, request: Request, mp: bool = True) -> dict[str, Any]:
     """Predict material properties for a molecule.
 
     Args:
@@ -51,7 +77,15 @@ async def predict_properties(payload: PredictRequest, request: Request) -> dict[
     """
     try:
         predictions = _predictor(request).predict(payload.smiles)
-        return {"smiles": payload.smiles, "properties": predictions}
+        response: dict[str, Any] = {"smiles": payload.smiles, "properties": predictions, "mp_data": None}
+        if mp:
+            client = _mp_client(request)
+            formula = client.smiles_to_formula(payload.smiles)
+            mp_results = client.search_by_formula(formula)
+            reconciled = _reconciler(request).reconcile(predictions, mp_results, formula=formula)
+            reconciled["formula"] = formula
+            response["mp_data"] = reconciled
+        return response
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

@@ -90,6 +90,24 @@ class PropertyPredictor:
             raise ValueError(f"Unsupported property '{property_name}'.")
         return float(self.predict(smiles)[property_name]["value"])
 
+    def predict_with_materials_project(self, smiles: str, mp_client: Any, reconciler: Any) -> dict[str, Any]:
+        """Predict properties and reconcile with Materials Project data when available.
+
+        Args:
+            smiles: The SMILES representation to predict from.
+            mp_client: MaterialsProjectClient-like object.
+            reconciler: PropertyReconciler-like object.
+
+        Returns:
+            Reconciled prediction payload.
+        """
+        predictions = self.predict(smiles)
+        formula = mp_client.smiles_to_formula(smiles)
+        mp_materials = mp_client.search_by_formula(formula)
+        reconciled = reconciler.reconcile(predictions, mp_materials, formula=formula)
+        reconciled["formula"] = formula
+        return reconciled
+
     def _load_deepchem_model(self) -> None:
         """Load a saved DeepChem model if a compatible directory exists.
 

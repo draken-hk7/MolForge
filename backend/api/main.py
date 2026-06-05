@@ -3,18 +3,37 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import os
+from pathlib import Path
 from typing import AsyncIterator
 
 from fastapi import FastAPI
 
 from api.middleware.cors import configure_cors
 from api.middleware.error_handler import global_exception_handler
-from api.routes import inverse_design, molecules, properties, simulation
+from api.routes import inverse_design, materials_project, molecules, properties, simulation
 from core.inverse_design_engine import InverseDesignEngine
+from core.materials_project_client import MaterialsProjectClient
 from core.molecular_dynamics import MolecularDynamicsRunner
 from core.molecule_parser import MoleculeParser
+from core.property_reconciler import PropertyReconciler
 from core.property_predictor import PropertyPredictor
 from core.structure_optimizer import StructureOptimizer
+
+
+def _load_env_file(path: Path) -> None:
+    """Load simple KEY=VALUE pairs from a local env file without extra runtime deps."""
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+
+
+_load_env_file(Path(__file__).resolve().parents[1] / ".env")
 
 
 @asynccontextmanager
@@ -35,6 +54,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.structure_optimizer = optimizer
     app.state.inverse_design_engine = InverseDesignEngine(predictor=predictor, parser=parser)
     app.state.md_runner = MolecularDynamicsRunner(optimizer=optimizer)
+    app.state.mp_client = MaterialsProjectClient()
+    app.state.property_reconciler = PropertyReconciler()
     yield
 
 
@@ -52,6 +73,7 @@ app.include_router(molecules.router)
 app.include_router(properties.router)
 app.include_router(simulation.router)
 app.include_router(inverse_design.router)
+app.include_router(materials_project.router)
 
 
 @app.get("/health")

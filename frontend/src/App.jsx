@@ -6,7 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Editor from './pages/Editor';
 import InverseDesign from './pages/InverseDesign';
 import Library from './pages/Library';
+import MaterialsSearch from './pages/MaterialsSearch';
 import Results from './pages/Results';
+import Settings from './pages/Settings';
 
 /**
  * Render the MolForge single-page application.
@@ -25,7 +27,9 @@ export default function App() {
               <Route path="/editor" element={<Editor />} />
               <Route path="/results" element={<Results />} />
               <Route path="/library" element={<Library />} />
+              <Route path="/materials" element={<MaterialsSearch />} />
               <Route path="/inverse-design" element={<InverseDesign />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>
         </div>

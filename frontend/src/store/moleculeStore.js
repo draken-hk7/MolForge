@@ -7,6 +7,15 @@ const initialState = {
   currentProperties: null,
   modifiedSmiles: '',
   modifiedProperties: null,
+  mpData: null,
+  mpStatus: { available: false, key_set: false, cache_size: 0, message: '' },
+  mpMaterials: [],
+  selectedMPMaterial: null,
+  predictionSettings: {
+    autoEnrichPredictions: true,
+    showMpComparison: true,
+    preferredDataSource: 'both'
+  },
   sessionHistory: [],
   savedMolecules: [],
   isLoading: false,
@@ -20,11 +29,20 @@ export const useMoleculeStore = create(
   persist(
     (set, get) => ({
       ...initialState,
-      setSmiles: (currentSmiles) => set({ currentSmiles, modifiedSmiles: '', modifiedProperties: null, error: '' }),
+      setSmiles: (currentSmiles) =>
+        set({ currentSmiles, modifiedSmiles: '', modifiedProperties: null, mpData: null, selectedMPMaterial: null, error: '' }),
       setMolecule: (currentMolecule) => set({ currentMolecule }),
       setProperties: (currentProperties) => set({ currentProperties }),
       setModifiedSmiles: (modifiedSmiles) => set({ modifiedSmiles }),
       setModifiedProperties: (modifiedProperties) => set({ modifiedProperties }),
+      setMpData: (mpData) => set({ mpData }),
+      setMpStatus: (mpStatus) => set({ mpStatus }),
+      setMpMaterials: (mpMaterials) => set({ mpMaterials }),
+      setSelectedMPMaterial: (selectedMPMaterial) => set({ selectedMPMaterial }),
+      setPredictionSetting: (key, value) =>
+        set((state) => ({
+          predictionSettings: { ...state.predictionSettings, [key]: value }
+        })),
       setLoading: (isLoading) => set({ isLoading }),
       setError: (error) => set({ error: error || '' }),
       addToHistory: (entry) =>
@@ -61,7 +79,9 @@ export const useMoleculeStore = create(
       clearSession: () =>
         set({
           ...initialState,
-          savedMolecules: get().savedMolecules
+          savedMolecules: get().savedMolecules,
+          mpStatus: get().mpStatus,
+          predictionSettings: get().predictionSettings
         })
     }),
     {
@@ -69,7 +89,8 @@ export const useMoleculeStore = create(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         savedMolecules: state.savedMolecules,
-        sessionHistory: state.sessionHistory
+        sessionHistory: state.sessionHistory,
+        predictionSettings: state.predictionSettings
       })
     }
   )

@@ -5,7 +5,7 @@ MolForge is a molecular material designer for interactive SMILES parsing, 3D vis
 ## Stack
 
 - Frontend: React 18, Vite, Tailwind CSS, Zustand, Recharts, React Router, Axios, 3Dmol.js
-- Backend: Python 3.11, FastAPI, Pydantic v2, optional RDKit, optional DeepChem on compatible Python versions, optional ASE, optional scikit-optimize
+- Backend: Python 3.11, FastAPI, Pydantic v2, Materials Project API, optional RDKit, optional DeepChem on compatible Python versions, optional ASE, optional scikit-optimize
 - Deployment: Docker Compose with nginx proxying `/api/*` to FastAPI
 
 ## Local Setup
@@ -32,6 +32,31 @@ npm run dev
 ```
 
 The app is available at `http://localhost:5173`.
+
+## Phase A: Materials Project Integration
+
+MolForge can enrich local ML predictions with real Materials Project data from `https://api.materialsproject.org`. The backend reads an API key from `MP_API_KEY` or from the in-app Settings page for the current server session.
+
+Get a free key from [materialsproject.org](https://materialsproject.org), then set:
+
+```bash
+set MP_API_KEY=mpapikey_your_key_here
+```
+
+or add it to `backend/.env`. Never commit a real key; `.env` files are ignored.
+
+New capabilities:
+
+- `/materials` Materials Project database browser with formula and element search
+- `/settings` API key validation, prediction preferences, and cache stats
+- `/api/mp/status`, `/api/mp/search-formula`, `/api/mp/search-elements`, `/api/mp/material/{material_id}`
+- `/api/properties/predict?mp=true` returns local ML predictions plus `mp_data` when available
+
+Fallback behavior:
+
+- If `MP_API_KEY` is not set, predictions stay local ML only.
+- If MP is unreachable, rate limited, or returns no formula match, the UI keeps the ML prediction path.
+- MP requests use a 5 second timeout and an in-memory TTL cache to avoid repeated queries.
 
 ## End-to-End Workflow
 
