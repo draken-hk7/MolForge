@@ -5,7 +5,7 @@ MolForge is a molecular material designer for interactive SMILES parsing, 3D vis
 ## Stack
 
 - Frontend: React 18, Vite, Tailwind CSS, Zustand, Recharts, React Router, Axios, 3Dmol.js
-- Backend: Python 3.11, FastAPI, Pydantic v2, optional RDKit, optional DeepChem, optional ASE, optional scikit-optimize
+- Backend: Python 3.11, FastAPI, Pydantic v2, optional RDKit, optional DeepChem on compatible Python versions, optional ASE, optional scikit-optimize
 - Deployment: Docker Compose with nginx proxying `/api/*` to FastAPI
 
 ## Local Setup
@@ -53,7 +53,7 @@ The frontend is served at `http://localhost`, and the backend is exposed on `htt
 
 ## Models
 
-MolForge works without external model artifacts. If DeepChem model artifacts are present in `backend/models/graphconv_qm9/`, the backend attempts to restore them at startup. Otherwise it uses deterministic descriptor-based fallbacks with units and confidence scores.
+MolForge works without external model artifacts. If DeepChem is installed and model artifacts are present in `backend/models/graphconv_qm9/`, the backend attempts to restore them at startup. Otherwise it uses deterministic descriptor-based fallbacks with units and confidence scores. CI uses Python 3.11, where DeepChem 2.7.1 is skipped because no compatible wheel is published.
 
 ## Tests
 
