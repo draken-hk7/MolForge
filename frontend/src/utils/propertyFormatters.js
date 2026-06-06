@@ -62,6 +62,63 @@ export function propertyEntries(properties) {
 }
 
 /**
+ * Format a number with a bounded significant-figure budget.
+ * @param {number | string} value Raw value.
+ * @param {number} decimals Maximum significant figures.
+ * @returns {string} Display-ready number.
+ */
+export function formatNumber(value, decimals = 3) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 'n/a';
+  }
+  if (numeric === 0) {
+    return '0';
+  }
+  const precision = Math.max(1, Number(decimals) || 3);
+  const rounded = Number(numeric.toPrecision(precision));
+  if (Math.abs(rounded) >= 1000) {
+    return rounded.toLocaleString(undefined, { maximumSignificantDigits: precision });
+  }
+  return String(rounded);
+}
+
+/**
+ * Format a number with multiplication-style scientific notation.
+ * @param {number | string} value Raw value.
+ * @param {number} decimals Mantissa decimal places.
+ * @returns {string} Scientific notation string.
+ */
+export function formatScientific(value, decimals = 1) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 'n/a';
+  }
+  if (numeric === 0) {
+    return '0';
+  }
+  const exponent = Math.floor(Math.log10(Math.abs(numeric)));
+  const mantissa = numeric / 10 ** exponent;
+  return `${mantissa.toFixed(decimals)} × 10^${exponent}`;
+}
+
+/**
+ * Format a percentage with consistent precision.
+ * @param {number | string} value Raw percentage value.
+ * @param {number} decimals Decimal places.
+ * @param {boolean} showSign Whether to prefix positive values with +.
+ * @returns {string} Display-ready percentage.
+ */
+export function formatPercent(value, decimals = 1, showSign = false) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 'n/a';
+  }
+  const sign = showSign && numeric > 0 ? '+' : '';
+  return `${sign}${numeric.toFixed(decimals)}%`;
+}
+
+/**
  * Format a numeric property value with compact precision.
  * @param {string} key Property key.
  * @param {number | string} value Raw value.
@@ -73,17 +130,9 @@ export function formatPropertyValue(key, value) {
     return 'n/a';
   }
   if (key === 'conductivity_sm') {
-    if (numeric === 0) {
-      return '0';
-    }
-    if (Math.abs(numeric) >= 1000 || Math.abs(numeric) < 0.01) {
-      return numeric.toExponential(2);
-    }
+    return formatScientific(numeric, 1);
   }
-  if (Math.abs(numeric) >= 100) {
-    return numeric.toFixed(1);
-  }
-  return numeric.toFixed(3).replace(/\.?0+$/, '');
+  return formatNumber(numeric, 3);
 }
 
 /**
@@ -118,8 +167,12 @@ export function normalizePropertyValue(key, value) {
  * @returns {string} Display-ready delta.
  */
 export function formatDelta(key, delta) {
-  const sign = Number(delta) > 0 ? '+' : '';
-  return `${sign}${formatPropertyValue(key, delta)} ${PROPERTY_DEFINITIONS[key]?.unit || ''}`.trim();
+  const numeric = Number(delta);
+  if (!Number.isFinite(numeric)) {
+    return 'n/a';
+  }
+  const sign = numeric > 0 ? '+' : numeric < 0 ? '-' : '';
+  return `${sign}${formatPropertyValue(key, Math.abs(numeric))} ${PROPERTY_DEFINITIONS[key]?.unit || ''}`.trim();
 }
 
 /**
@@ -137,7 +190,7 @@ export function deltaTone(key, delta) {
   if (better === 'higher') {
     return numeric > 0 ? 'positive' : 'negative';
   }
-  return numeric > 0 ? 'positive' : 'negative';
+  return 'neutral';
 }
 
 /**

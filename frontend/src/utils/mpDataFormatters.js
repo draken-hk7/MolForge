@@ -1,3 +1,5 @@
+import { formatNumber } from './propertyFormatters';
+
 const MP_PROPERTY_META = {
   band_gap: { label: 'Band Gap', unit: 'eV', precision: 3 },
   formation_energy_per_atom: { label: 'Formation Energy', unit: 'eV/atom', precision: 4 },
@@ -26,7 +28,11 @@ export function formatMPProperty(key, value) {
     return { label: meta.label, value, unit: meta.unit, formatted: 'n/a' };
   }
   const numeric = Number(value);
-  const formatted = Number.isFinite(numeric) ? numeric.toFixed(meta.precision).replace(/\.?0+$/, '') : String(value);
+  const formatted = Number.isFinite(numeric)
+    ? meta.precision === 0
+      ? Math.round(numeric).toLocaleString()
+      : formatNumber(numeric, Math.min(meta.precision || 3, 3))
+    : String(value);
   return {
     label: meta.label,
     value,
@@ -99,6 +105,9 @@ export function formatSpacegroup(spacegroup) {
  * @returns {{delta_pct: number | null, direction: string, significant: boolean}} Comparison metadata.
  */
 export function compareMlToMp(mlVal, mpVal, propertyKey) {
+  if (mlVal === null || mlVal === undefined || mlVal === '' || mpVal === null || mpVal === undefined || mpVal === '') {
+    return { delta_pct: null, direction: 'none', significant: false, propertyKey };
+  }
   const ml = Number(mlVal);
   const mp = Number(mpVal);
   if (!Number.isFinite(ml) || !Number.isFinite(mp)) {
@@ -107,7 +116,7 @@ export function compareMlToMp(mlVal, mpVal, propertyKey) {
   const denominator = Math.abs(mp) > 1e-12 ? Math.abs(mp) : 1;
   const delta = ((ml - mp) / denominator) * 100;
   return {
-    delta_pct: Number(delta.toFixed(2)),
+    delta_pct: Number(delta.toFixed(1)),
     direction: delta > 0 ? 'higher' : delta < 0 ? 'lower' : 'same',
     significant: Math.abs(delta) > 20,
     propertyKey

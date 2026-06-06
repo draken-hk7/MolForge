@@ -26,6 +26,7 @@ export function useMaterialsProject() {
   const setMpData = useMoleculeStore((state) => state.setMpData);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const clearError = useCallback(() => setError(null), []);
 
   const checkStatus = useCallback(async () => {
     try {
@@ -173,6 +174,7 @@ export function useMaterialsProject() {
     selectedMPMaterial,
     isLoading,
     error,
+    clearError,
     searchByFormula,
     searchByElements,
     searchByMaterialId,

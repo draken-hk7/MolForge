@@ -1,5 +1,6 @@
 import { Copy, ExternalLink, FlaskConical, X } from 'lucide-react';
 
+import { cn } from '../../utils/classNames';
 import { formatCrystalSystem, formatMPProperty, formatSpacegroup, getMPQualityBadge } from '../../utils/mpDataFormatters';
 
 const sections = {
@@ -9,12 +10,20 @@ const sections = {
   Structural: ['density', 'volume', 'nsites', 'crystal_system']
 };
 
+function displayMPValue(material, key) {
+  const value = material[key];
+  if (typeof value === 'boolean') {
+    return String(value);
+  }
+  return formatMPProperty(key, value).formatted;
+}
+
 /**
  * Render full detail for one Materials Project material.
- * @param {{material: object, onClose?: Function, onLoad?: Function}} props Component props.
+ * @param {{material: object, onClose?: Function, onLoad?: Function, className?: string}} props Component props.
  * @returns {JSX.Element | null} Material detail panel.
  */
-export default function MPMaterialDetail({ material, onClose, onLoad }) {
+export default function MPMaterialDetail({ material, onClose, onLoad, className }) {
   if (!material) {
     return null;
   }
@@ -26,11 +35,13 @@ export default function MPMaterialDetail({ material, onClose, onLoad }) {
   };
 
   return (
-    <aside className="glass-panel rounded-2xl p-4">
+    <aside className={cn('glass-panel rounded-2xl p-4', className)}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="mono-smiles text-lg font-bold text-white">{material.material_id}</h2>
+            <h2 className="font-mono text-lg font-semibold text-white" title={material.material_id}>
+              {material.material_id}
+            </h2>
             <span className={`rounded-md px-2 py-1 text-xs font-semibold ${badge.color === 'red' ? 'bg-red-500/15 text-red-200' : 'bg-emerald-500/15 text-emerald-200'}`}>
               {badge.label}
             </span>
@@ -56,14 +67,19 @@ export default function MPMaterialDetail({ material, onClose, onLoad }) {
       <div className="space-y-4">
         {Object.entries(sections).map(([section, keys]) => (
           <div key={section}>
-            <h3 className="mb-2 text-sm font-semibold text-white">{section}</h3>
+            <h3 className="mb-2 border-b border-white/10 pb-2 text-lg font-medium text-white">{section}</h3>
             <div className="grid gap-2 sm:grid-cols-2">
-              {keys.map((key) => (
-                <div key={key} className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
-                  <div className="text-xs text-slate-500">{formatMPProperty(key, material[key]).label}</div>
-                  <div className="mono-smiles mt-1 text-sm text-blue-100">{typeof material[key] === 'boolean' ? String(material[key]) : formatMPProperty(key, material[key]).formatted}</div>
-                </div>
-              ))}
+              {keys.map((key) => {
+                const formatted = formatMPProperty(key, material[key]);
+                const displayValue = displayMPValue(material, key);
+                const missing = displayValue === 'n/a';
+                return (
+                  <div key={key} className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
+                    <div className="text-xs text-slate-500">{formatted.label}</div>
+                    <div className={cn('mt-1 font-mono text-sm', missing ? 'text-slate-500 italic' : 'text-blue-100')}>{displayValue}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}

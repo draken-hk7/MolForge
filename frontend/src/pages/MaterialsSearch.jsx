@@ -91,7 +91,7 @@ export default function MaterialsSearch() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
+          <h1 className="flex items-center gap-2 text-2xl font-semibold text-white">
             <Database className="text-blue-300" size={24} /> Materials Project Database
           </h1>
           <p className="mt-1 text-sm text-slate-400">Real DFT-computed materials data with local ML fallback</p>
@@ -99,13 +99,13 @@ export default function MaterialsSearch() {
         <MPStatusBadge />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)_420px]">
+      <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)_420px]">
         <div className="space-y-4">
           <MPSearchPanel onSelectMaterial={handleSelect} />
           <section className="glass-panel rounded-2xl p-4">
             <div className="mb-3 flex items-center gap-2">
               <Filter size={17} className="text-blue-300" />
-              <h2 className="text-base font-semibold text-white">Filters</h2>
+              <h2 className="text-lg font-medium text-white">Filters</h2>
             </div>
             <div className="space-y-3">
               <label className="block">
@@ -160,10 +160,10 @@ export default function MaterialsSearch() {
         <section className="glass-panel rounded-2xl p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-semibold text-white">Results</h2>
+              <h2 className="text-lg font-medium text-white">Results</h2>
               <p className="text-xs text-slate-400">{filtered.length} materials match current filters</p>
             </div>
-            {isLoading && <Loader2 size={18} className="animate-spin text-blue-300" />}
+            {isLoading && <Loader2 size={16} className="animate-spin text-indigo-500" />}
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {pageRows.map((material) => {
@@ -176,8 +176,10 @@ export default function MaterialsSearch() {
                   onClick={() => handleSelect(material)}
                   className={cn('rounded-2xl border p-4 text-left transition', active ? 'border-blue-400/60 bg-blue-500/15' : 'border-white/10 bg-white/[0.04] hover:border-blue-400/40 hover:bg-blue-500/10')}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="mono-smiles text-sm font-semibold text-blue-200">{material.material_id}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="shrink-0 font-mono text-sm font-semibold text-blue-200" title={material.material_id}>
+                      {material.material_id}
+                    </span>
                     <span className={cn('rounded-md px-2 py-1 text-xs', badge.color === 'red' ? 'bg-red-500/15 text-red-200' : 'bg-emerald-500/15 text-emerald-200')}>
                       {badge.label}
                     </span>
@@ -195,7 +197,9 @@ export default function MaterialsSearch() {
           </div>
           {pageRows.length === 0 && (
             <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-8 text-center text-sm text-slate-400">
-              No materials match the current query and filters.
+              <Database className="mx-auto mb-3 text-indigo-300" size={32} />
+              <div className="font-medium text-slate-300">No materials found</div>
+              <p className="mt-1 text-sm text-slate-400">No materials match the current query and filters.</p>
             </div>
           )}
           <div className="mt-4 flex items-center justify-between gap-3">
@@ -221,7 +225,7 @@ export default function MaterialsSearch() {
           </div>
         </section>
 
-        <MPMaterialDetail material={selectedMPMaterial} onLoad={handleLoad} />
+        <MPMaterialDetail material={selectedMPMaterial} onLoad={handleLoad} className="xl:col-span-2 2xl:col-span-1" />
       </div>
     </div>
   );

@@ -22,7 +22,9 @@ export default function PropertyPanel() {
   const deltas =
     currentProperties && modifiedProperties
       ? Object.keys(modifiedProperties).reduce((acc, key) => {
-          acc[key] = Number(modifiedProperties[key].value) - Number(currentProperties[key].value);
+          const current = Number(currentProperties[key]?.value);
+          const modified = Number(modifiedProperties[key]?.value);
+          acc[key] = Number.isFinite(current) && Number.isFinite(modified) ? modified - current : null;
           return acc;
         }, {})
       : {};
@@ -31,7 +33,7 @@ export default function PropertyPanel() {
     <section className="glass-panel rounded-2xl p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-white">Properties</h2>
+          <h2 className="text-lg font-medium text-white">Properties</h2>
           <p className="text-xs text-slate-400">Band gap, mechanics, transport, and optics</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
@@ -51,7 +53,7 @@ export default function PropertyPanel() {
             disabled={isLoading}
             className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
+            {isLoading ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : <Activity size={16} />}
             Predict
           </button>
         </div>
@@ -62,20 +64,22 @@ export default function PropertyPanel() {
       {showMpData ? (
         <MPComparisonView mpData={mpData} />
       ) : isLoading && entries.length === 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="h-32 animate-pulse rounded-2xl border border-white/10 bg-white/[0.05]" />
+            <div key={index} className="h-32 animate-pulse rounded-2xl border border-white/10 bg-indigo-500/10" />
           ))}
         </div>
       ) : entries.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
           {entries.map((entry) => (
             <PropertyCard key={entry.key} propertyKey={entry.key} delta={deltas[entry.key]} {...entry} />
           ))}
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-sm text-slate-400">
-          Property predictions will appear after a molecule is loaded.
+          <Activity className="mb-3 text-indigo-300" size={32} />
+          <div className="font-medium text-slate-300">No properties yet</div>
+          <p className="mt-1 text-sm text-slate-400">Property predictions will appear after a molecule is loaded.</p>
         </div>
       )}
     </section>

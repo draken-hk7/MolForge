@@ -73,7 +73,7 @@ export default function Dashboard() {
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div>
-          <h2 className="mb-3 text-lg font-semibold text-white">Quick Start</h2>
+          <h2 className="mb-3 text-lg font-medium text-white">Quick Start</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {quickStarts.map((item) => {
               const Icon = item.icon;
@@ -94,14 +94,14 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <h2 className="mb-3 text-lg font-semibold text-white">Recent Session</h2>
+          <h2 className="mb-3 text-lg font-medium text-white">Recent Session</h2>
           <div className="glass-panel rounded-2xl p-4">
             {sessionHistory.length > 0 ? (
               <ol className="space-y-3">
                 {sessionHistory.slice(0, 5).map((entry) => (
                   <li key={entry.id} className="border-l border-indigo-400/40 pl-3">
                     <div className="text-sm font-medium text-white">{entry.name}</div>
-                    <div className="mono-smiles truncate text-xs text-indigo-200">{entry.smiles}</div>
+                    <div className="truncate font-mono text-xs text-indigo-200" title={entry.smiles}>{entry.smiles}</div>
                     <div className="text-[11px] text-slate-500">{new Date(entry.timestamp).toLocaleString()}</div>
                   </li>
                 ))}

@@ -53,10 +53,10 @@ export default function AtomPicker({ selected = 'C', onSelect }) {
     <section className="glass-panel rounded-2xl p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-white">Atom Picker</h2>
+          <h2 className="text-lg font-medium text-white">Atom Picker</h2>
           <p className="text-xs text-slate-400">First 36 elements</p>
         </div>
-        <span className="mono-smiles rounded-lg border border-indigo-400/30 bg-indigo-500/15 px-2 py-1 text-sm font-semibold text-indigo-100">{selected}</span>
+        <span className="rounded-lg border border-indigo-400/30 bg-indigo-500/15 px-2 py-1 font-mono text-sm font-semibold text-indigo-100">{selected}</span>
       </div>
       <Tooltip.Provider delayDuration={120}>
         <div className="grid grid-cols-6 gap-1.5">
@@ -67,7 +67,7 @@ export default function AtomPicker({ selected = 'C', onSelect }) {
                   type="button"
                   onClick={() => onSelect(symbol)}
                   className={cn(
-                    'mono-smiles aspect-square rounded-lg border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400',
+                    'aspect-square rounded-lg border font-mono text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400',
                     selected === symbol && 'border-indigo-300 bg-indigo-500 text-white',
                     selected !== symbol && commonOrganic.has(symbol) && 'border-indigo-400/25 bg-indigo-500/12 text-indigo-100 hover:bg-indigo-500/20',
                     selected !== symbol && !commonOrganic.has(symbol) && 'border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/10'

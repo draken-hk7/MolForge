@@ -52,14 +52,14 @@ export default function MPStatusBadge() {
               value={apiKey}
               onChange={(event) => setApiKeyInput(event.target.value)}
               placeholder="mpapikey_xxxxxxxxxxxx"
-              className="mono-smiles w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-blue-100 outline-none focus:border-blue-400/60"
+              className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 font-mono text-xs text-blue-100 outline-none focus:border-blue-400/60"
             />
             <button
               type="submit"
               disabled={isLoading || !apiKey.trim()}
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isLoading ? <Loader2 size={15} className="animate-spin" /> : <KeyRound size={15} />}
+              {isLoading ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : <KeyRound size={16} />}
               Validate & Save
             </button>
           </form>

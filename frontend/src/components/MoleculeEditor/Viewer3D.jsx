@@ -125,7 +125,7 @@ export default function Viewer3D({ molblock, style = 'ball-stick' }) {
     <section className="glass-panel overflow-hidden rounded-2xl">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
         <div>
-          <h2 className="text-base font-semibold text-white">3D Structure</h2>
+          <h2 className="text-lg font-medium text-white">3D Structure</h2>
           <p className="text-xs text-slate-400">{hoverAtom || 'Ball-stick interactive view'}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -167,7 +167,7 @@ export default function Viewer3D({ molblock, style = 'ball-stick' }) {
         {!molblock && (
           <div className="absolute inset-0 grid place-items-center px-6 text-center">
             <div className="max-w-sm">
-              <Wand2 className="mx-auto mb-3 text-indigo-300" size={34} />
+              <Wand2 className="mx-auto mb-3 text-indigo-300" size={32} />
               <p className="text-sm text-slate-400">A parsed molecule will render here.</p>
             </div>
           </div>

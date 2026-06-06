@@ -2,7 +2,7 @@ import { Info } from 'lucide-react';
 
 import { cn } from '../../utils/classNames';
 import { compareMlToMp, formatMPProperty } from '../../utils/mpDataFormatters';
-import { formatPropertyValue } from '../../utils/propertyFormatters';
+import { formatPercent, formatPropertyValue } from '../../utils/propertyFormatters';
 
 /**
  * Render one MP-vs-ML property card.
@@ -12,9 +12,11 @@ import { formatPropertyValue } from '../../utils/propertyFormatters';
 export default function MPPropertyCard({ propertyKey, mlKey, mlValue, mpValue, source = 'mp' }) {
   const formatted = formatMPProperty(propertyKey, mpValue);
   const comparison = compareMlToMp(mlValue, mpValue, propertyKey);
+  const mpMissing = formatted.formatted === 'n/a';
+  const mlMissing = mlValue === null || mlValue === undefined;
   const deltaClass =
     comparison.delta_pct === null
-      ? 'bg-white/10 text-slate-300'
+      ? 'bg-white/10 text-slate-500 italic'
       : Math.abs(comparison.delta_pct) > 50
         ? 'bg-red-500/15 text-red-200'
         : Math.abs(comparison.delta_pct) > 20
@@ -33,18 +35,18 @@ export default function MPPropertyCard({ propertyKey, mlKey, mlValue, mpValue, s
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-slate-500">Materials Project</span>
-          <span className="mono-smiles text-sm font-semibold text-blue-100">{formatted.formatted}</span>
+          <span className={cn('font-mono text-sm font-semibold', mpMissing ? 'text-slate-500 italic' : 'text-blue-100')}>{formatted.formatted}</span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-slate-500">Local ML</span>
-          <span className="mono-smiles text-sm text-indigo-100">
-            {mlValue === null || mlValue === undefined ? 'n/a' : formatPropertyValue(mlKey || propertyKey, mlValue)}
+          <span className={cn('font-mono text-sm', mlMissing ? 'text-slate-500 italic' : 'text-indigo-100')}>
+            {mlMissing ? 'n/a' : formatPropertyValue(mlKey || propertyKey, mlValue)}
           </span>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className={cn('rounded-md px-2 py-1 text-xs font-semibold', deltaClass)}>
-          {comparison.delta_pct === null ? 'No delta' : `${comparison.delta_pct}% ${comparison.direction}`}
+          {comparison.delta_pct === null ? 'n/a' : `${formatPercent(comparison.delta_pct, 1, true)} ${comparison.direction}`}
         </span>
         <span className={cn('rounded-md px-2 py-1 text-xs font-semibold', source === 'mp' ? 'bg-blue-500/15 text-blue-200' : 'bg-indigo-500/15 text-indigo-200')}>
           {source === 'mp' ? 'Materials Project' : 'Local ML'}

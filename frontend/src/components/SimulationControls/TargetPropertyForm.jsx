@@ -2,7 +2,7 @@ import { Loader2, Search } from 'lucide-react';
 import { useState } from 'react';
 
 import { runInverseDesign } from '../../utils/api';
-import { PROPERTY_DEFINITIONS, formatPropertyValue } from '../../utils/propertyFormatters';
+import { PROPERTY_DEFINITIONS, formatPercent, formatPropertyValue } from '../../utils/propertyFormatters';
 
 const targetOptions = ['bandgap_ev', 'melting_point_k', 'hardness_gpa', 'solubility_logS'];
 
@@ -38,7 +38,7 @@ export default function TargetPropertyForm({ onResults, onSelectCandidate, showR
     <section className="glass-panel rounded-2xl p-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <h2 className="text-base font-semibold text-white">Target Property</h2>
+          <h2 className="text-lg font-medium text-white">Target Property</h2>
           <p className="text-xs text-slate-400">Search molecules against local predictors</p>
         </div>
         <label className="block">
@@ -62,7 +62,7 @@ export default function TargetPropertyForm({ onResults, onSelectCandidate, showR
             step="0.01"
             value={targetValue}
             onChange={(event) => setTargetValue(event.target.value)}
-            className="mono-smiles w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-indigo-100 outline-none focus:border-indigo-400/60"
+            className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 font-mono text-sm text-indigo-100 outline-none focus:border-indigo-400/60"
           />
         </label>
         <label className="block">
@@ -84,7 +84,7 @@ export default function TargetPropertyForm({ onResults, onSelectCandidate, showR
           disabled={isRunning}
           className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isRunning ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+          {isRunning ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : <Search size={16} />}
           Find Molecules
         </button>
       </form>
@@ -102,9 +102,9 @@ export default function TargetPropertyForm({ onResults, onSelectCandidate, showR
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-semibold text-white">Rank {index + 1}</span>
-                <span className="rounded-md bg-black/25 px-2 py-1 text-xs text-slate-300">score {candidate.score}</span>
+                <span className="rounded-md bg-black/25 px-2 py-1 text-xs text-slate-300">score {formatPercent(Number(candidate.score) * 100, 1)}</span>
               </div>
-              <p className="mono-smiles mt-2 break-all text-xs text-indigo-200">{candidate.smiles}</p>
+              <p className="mt-2 truncate font-mono text-xs text-indigo-200" title={candidate.smiles}>{candidate.smiles}</p>
               <p className="mt-2 text-xs text-slate-400">
                 {PROPERTY_DEFINITIONS[targetProperty].label}: {formatPropertyValue(targetProperty, candidate.predicted_value)}{' '}
                 {PROPERTY_DEFINITIONS[targetProperty].unit}

@@ -1,4 +1,4 @@
-import { Clipboard, Eraser, FlaskConical, Play } from 'lucide-react';
+import { Clipboard, Eraser, Loader2, Play } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useMolecule } from '../../hooks/useMolecule';
@@ -52,7 +52,7 @@ export default function SMILESInput() {
     <section className="glass-panel rounded-2xl p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-white">SMILES</h2>
+          <h2 className="text-lg font-medium text-white">SMILES</h2>
           <p className="text-xs text-slate-400">Canonical input for the active molecule</p>
         </div>
         <span className={cn('h-3 w-3 rounded-full', validation.valid ? 'bg-emerald-400' : 'bg-red-400')} title={validation.message} />
@@ -68,7 +68,7 @@ export default function SMILESInput() {
           }
         }}
         rows={4}
-        className="mono-smiles w-full resize-none rounded-lg border border-white/10 bg-black/30 px-3 py-3 text-sm text-indigo-100 outline-none transition placeholder:text-slate-600 focus:border-indigo-400/60"
+        className="w-full resize-none rounded-lg border border-white/10 bg-black/30 px-3 py-3 font-mono text-sm text-indigo-100 outline-none transition placeholder:text-slate-600 focus:border-indigo-400/60"
         placeholder="CC(=O)Oc1ccccc1C(=O)O"
       />
 
@@ -107,7 +107,7 @@ export default function SMILESInput() {
           disabled={isLoading}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isLoading ? <FlaskConical size={16} className="animate-pulse" /> : <Play size={16} />}
+          {isLoading ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : <Play size={16} />}
           Parse
         </button>
       </div>

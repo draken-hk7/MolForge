@@ -28,8 +28,8 @@ export default function StructureLibrary() {
   if (savedMolecules.length === 0) {
     return (
       <div className="glass-panel rounded-2xl p-8 text-center">
-        <Database className="mx-auto mb-3 text-indigo-300" size={36} />
-        <h2 className="text-lg font-semibold text-white">No saved molecules yet</h2>
+        <Database className="mx-auto mb-3 text-indigo-300" size={32} />
+        <h2 className="text-lg font-medium text-white">No saved molecules yet</h2>
         <p className="mt-2 text-sm text-slate-400">Saved molecular designs will be listed here.</p>
       </div>
     );

@@ -13,7 +13,7 @@ export default function MoleculeCard({ molecule, onLoad, onRemove }) {
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-base font-semibold text-white">{molecule.name}</h3>
-          <p className="mono-smiles mt-1 truncate text-xs text-indigo-200">{molecule.smiles}</p>
+          <p className="mt-1 truncate font-mono text-xs text-indigo-200" title={molecule.smiles}>{molecule.smiles}</p>
         </div>
         <span className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-400">
           {new Date(molecule.timestamp).toLocaleDateString()}

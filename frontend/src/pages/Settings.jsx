@@ -1,4 +1,4 @@
-import { Eye, EyeOff, KeyRound, Settings as SettingsIcon, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, Loader2, Settings as SettingsIcon, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import MPStatusBadge from '../components/MaterialsProject/MPStatusBadge';
@@ -34,7 +34,7 @@ export default function Settings() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
+          <h1 className="flex items-center gap-2 text-2xl font-semibold text-white">
             <SettingsIcon className="text-indigo-300" size={24} /> Settings
           </h1>
           <p className="mt-1 text-sm text-slate-400">Materials Project, prediction, and cache preferences</p>
@@ -45,7 +45,7 @@ export default function Settings() {
       <section className="glass-panel rounded-2xl p-4">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-white">Materials Project API</h2>
+            <h2 className="text-lg font-medium text-white">Materials Project API</h2>
             <p className="text-xs text-slate-400">Get your free API key at materialsproject.org Dashboard API Keys</p>
           </div>
           <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
@@ -59,7 +59,7 @@ export default function Settings() {
               value={apiKey}
               onChange={(event) => setApiKeyInput(event.target.value)}
               placeholder="mpapikey_xxxxxxxxxxxx"
-              className="mono-smiles w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 pr-11 text-sm text-blue-100 outline-none focus:border-blue-400/60"
+              className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 pr-11 font-mono text-sm text-blue-100 outline-none focus:border-blue-400/60"
             />
             <button
               type="button"
@@ -75,7 +75,7 @@ export default function Settings() {
             disabled={isLoading || !apiKey.trim()}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <KeyRound size={16} /> Validate & Save
+            {isLoading ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : <KeyRound size={16} />} Validate & Save
           </button>
         </form>
         <a href="https://materialsproject.org" target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-blue-300 hover:text-blue-200">
@@ -84,7 +84,7 @@ export default function Settings() {
       </section>
 
       <section className="glass-panel rounded-2xl p-4">
-        <h2 className="mb-4 text-base font-semibold text-white">Prediction Settings</h2>
+        <h2 className="mb-4 text-lg font-medium text-white">Prediction Settings</h2>
         <div className="space-y-3">
           {[
             ['autoEnrichPredictions', 'Auto-enrich predictions with MP data'],
@@ -116,7 +116,7 @@ export default function Settings() {
       </section>
 
       <section className="glass-panel rounded-2xl p-4">
-        <h2 className="mb-4 text-base font-semibold text-white">Cache</h2>
+        <h2 className="mb-4 text-lg font-medium text-white">Cache</h2>
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-3">
           <div>
             <div className="text-sm font-semibold text-white">{mpStatus.cache_size || 0} cached MP queries</div>

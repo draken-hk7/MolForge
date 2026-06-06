@@ -69,8 +69,10 @@ export default function Editor() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Molecule Editor</h1>
-          <p className="mono-smiles mt-1 break-all text-sm text-indigo-200">{activeSmiles || 'No molecule loaded'}</p>
+          <h1 className="text-2xl font-semibold text-white">Molecule Editor</h1>
+          <p className="mt-1 max-w-[min(72vw,48rem)] truncate font-mono text-sm text-indigo-200" title={activeSmiles || 'No molecule loaded'}>
+            {activeSmiles || 'No molecule loaded'}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={handleSave} className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 transition hover:border-indigo-400/50">
@@ -91,13 +93,13 @@ export default function Editor() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)_420px]">
+      <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)] 2xl:grid-cols-[360px_minmax(0,1fr)_420px]">
         <div className="space-y-4">
           <SMILESInput />
           <AtomPicker selected={selectedAtom} onSelect={setSelectedAtom} />
           <section className="glass-panel rounded-2xl p-4">
             <div className="mb-3">
-              <h2 className="text-base font-semibold text-white">Modify</h2>
+              <h2 className="text-lg font-medium text-white">Modify</h2>
               <p className="text-xs text-slate-400">Atom swap and functional group edits</p>
             </div>
             <div className="mb-3 grid grid-cols-[1fr_auto] gap-2">
@@ -106,7 +108,7 @@ export default function Editor() {
                 min="0"
                 value={atomIndex}
                 onChange={(event) => setAtomIndex(event.target.value)}
-                className="mono-smiles rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-indigo-100 outline-none focus:border-indigo-400/60"
+                className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 font-mono text-sm text-indigo-100 outline-none focus:border-indigo-400/60"
               />
               <button
                 type="button"
@@ -122,7 +124,7 @@ export default function Editor() {
                   key={group}
                   type="button"
                   onClick={() => addGroup(group)}
-                  className="mono-smiles rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm font-semibold text-slate-200 transition hover:border-indigo-400/50 hover:text-white"
+                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-2 font-mono text-sm font-semibold text-slate-200 transition hover:border-indigo-400/50 hover:text-white"
                 >
                   {group}
                 </button>
@@ -134,7 +136,7 @@ export default function Editor() {
           <Viewer3D molblock={currentMolecule?.molblock} />
           <SimulationControls />
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 xl:col-span-2 2xl:col-span-1">
           <PropertyPanel />
           {showHistory && <HistoryLog />}
         </div>

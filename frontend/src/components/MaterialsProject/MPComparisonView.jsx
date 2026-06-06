@@ -1,7 +1,7 @@
 import { Download, ShieldCheck } from 'lucide-react';
 
 import { compareMlToMp, formatMPProperty } from '../../utils/mpDataFormatters';
-import { formatPropertyValue } from '../../utils/propertyFormatters';
+import { formatPercent, formatPropertyValue } from '../../utils/propertyFormatters';
 
 /**
  * Build comparison rows from reconciled MP data.
@@ -45,7 +45,11 @@ export default function MPComparisonView({ mpData }) {
   };
 
   if (!mpData) {
-    return <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-5 text-sm text-slate-400">MP comparison data is not loaded.</div>;
+    return (
+      <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-sm text-slate-400">
+        MP comparison data is not loaded.
+      </div>
+    );
   }
 
   return (
@@ -58,7 +62,7 @@ export default function MPComparisonView({ mpData }) {
               {matched.length} properties matched
             </div>
             <div className="mt-1 text-xs text-slate-400">
-              {avgDeviation === null ? 'No numeric overlap yet' : `Average deviation ${avgDeviation.toFixed(1)}%`}
+              {avgDeviation === null ? 'No numeric overlap yet' : `Average deviation ${formatPercent(avgDeviation, 1)}`}
             </div>
           </div>
           {mpData.best_match && <span className="rounded-lg bg-blue-500/15 px-3 py-1.5 text-xs font-semibold text-blue-100">Data verified by Materials Project</span>}
@@ -82,14 +86,24 @@ export default function MPComparisonView({ mpData }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.key} className="border-t border-white/5">
-                <td className="px-3 py-3 font-medium text-white">{row.label}</td>
-                <td className="mono-smiles px-3 py-3 text-indigo-100">{row.ml === null ? 'n/a' : formatPropertyValue(row.mlKey || row.key, row.ml)}</td>
-                <td className="mono-smiles px-3 py-3 text-blue-100">{formatMPProperty(row.key, row.mp).formatted}</td>
-                <td className="mono-smiles px-3 py-3 text-slate-300">{row.comparison.delta_pct === null ? 'n/a' : `${row.comparison.delta_pct}%`}</td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const mpFormatted = formatMPProperty(row.key, row.mp).formatted;
+              const mlMissing = row.ml === null || row.ml === undefined;
+              const mpMissing = mpFormatted === 'n/a';
+              const deltaMissing = row.comparison.delta_pct === null;
+              return (
+                <tr key={row.key} className="border-t border-white/5">
+                  <td className="px-3 py-3 font-medium text-white">{row.label}</td>
+                  <td className={`px-3 py-3 font-mono ${mlMissing ? 'text-slate-500 italic' : 'text-indigo-100'}`}>
+                    {mlMissing ? 'n/a' : formatPropertyValue(row.mlKey || row.key, row.ml)}
+                  </td>
+                  <td className={`px-3 py-3 font-mono ${mpMissing ? 'text-slate-500 italic' : 'text-blue-100'}`}>{mpFormatted}</td>
+                  <td className={`px-3 py-3 font-mono ${deltaMissing ? 'text-slate-500 italic' : 'text-slate-300'}`}>
+                    {deltaMissing ? 'n/a' : formatPercent(row.comparison.delta_pct, 1, true)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

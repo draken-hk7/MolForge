@@ -44,7 +44,7 @@ export default function ComparisonTable({ original, modified }) {
     <section className="glass-panel rounded-2xl p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-white">Comparison</h2>
+          <h2 className="text-lg font-medium text-white">Comparison</h2>
           <p className="text-xs text-slate-400">Original versus modified properties</p>
         </div>
         <div className="flex rounded-lg border border-white/10 bg-black/20 p-1">
@@ -79,16 +79,16 @@ export default function ComparisonTable({ original, modified }) {
               const tone = deltaTone(row.key, row.delta);
               return (
                 <tr key={row.key} className="border-b border-white/5 last:border-0">
-                  <td className="mono-smiles py-3 pr-3 text-slate-200">
+                  <td className="py-3 pr-3 font-mono text-slate-200">
                     {formatPropertyValue(row.key, row.original)} {row.unit}
                   </td>
                   <td className="py-3 pr-3 font-medium text-white">{row.property}</td>
-                  <td className="mono-smiles py-3 pr-3 text-slate-200">
+                  <td className="py-3 pr-3 font-mono text-slate-200">
                     {formatPropertyValue(row.key, row.modified)} {row.unit}
                   </td>
                   <td
                     className={cn(
-                      'mono-smiles py-3 font-semibold',
+                      'py-3 font-mono font-semibold',
                       tone === 'positive' && 'text-emerald-300',
                       tone === 'negative' && 'text-red-300',
                       tone === 'neutral' && 'text-slate-400'
@@ -101,7 +101,13 @@ export default function ComparisonTable({ original, modified }) {
             })}
           </tbody>
         </table>
-        {rows.length === 0 && <div className="py-8 text-center text-sm text-slate-400">Comparison data will appear after prediction.</div>}
+        {rows.length === 0 && (
+          <div className="py-8 text-center text-sm text-slate-400">
+            <ArrowDownUp className="mx-auto mb-3 text-indigo-300" size={32} />
+            <div className="font-medium text-slate-300">No comparison data</div>
+            <p className="mt-1 text-sm text-slate-400">Comparison data will appear after prediction.</p>
+          </div>
+        )}
       </div>
     </section>
   );

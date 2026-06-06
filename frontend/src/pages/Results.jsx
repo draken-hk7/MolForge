@@ -70,7 +70,7 @@ export default function Results() {
   if (!currentSmiles) {
     return (
       <div className="glass-panel rounded-2xl p-8 text-center">
-        <GitCompare className="mx-auto mb-3 text-indigo-300" size={36} />
+        <GitCompare className="mx-auto mb-3 text-indigo-300" size={32} />
         <h1 className="text-xl font-semibold text-white">No comparison loaded</h1>
         <p className="mt-2 text-sm text-slate-400">Molecule comparisons will appear after editor predictions.</p>
       </div>
@@ -81,7 +81,7 @@ export default function Results() {
     <div id="results-report" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Results</h1>
+          <h1 className="text-2xl font-semibold text-white">Results</h1>
           <p className="text-sm text-slate-400">{isLoading ? 'Refreshing comparison data' : 'Property comparison dashboard'}</p>
         </div>
         <button
