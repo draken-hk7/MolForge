@@ -74,7 +74,8 @@ async def shared_molecule(token: str, request: Request) -> dict[str, Any]:
     rows = gateway(request).table("molecules").select("*").eq("share_token", token).eq("is_public", True).limit(1).execute().data
     if not rows:
         raise HTTPException(status_code=404, detail="Shared molecule not found.")
-    gateway(request).rpc("increment_molecule_view", {"target": rows[0]["id"]})
+    if gateway(request).service_available:
+        gateway(request).rpc("increment_molecule_view", {"target": rows[0]["id"]})
     return rows[0]
 
 
@@ -114,7 +115,8 @@ async def fork_molecule(molecule_id: str, request: Request, authorization: str |
     values = {key: source[key] for key in ("name", "smiles", "mol_data", "properties", "mp_data", "tags")}
     values.update(user_id=user["id"], name=f"{source['name']} (fork)", forked_from=molecule_id, is_public=False)
     forked = gateway(request).table("molecules").insert(values).execute().data[0]
-    gateway(request).rpc("increment_molecule_fork", {"target": molecule_id})
+    if gateway(request).service_available:
+        gateway(request).rpc("increment_molecule_fork", {"target": molecule_id})
     track(user["id"], "molecule_forked", {"molecule_id": molecule_id})
     return forked
 

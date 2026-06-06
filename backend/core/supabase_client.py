@@ -69,7 +69,10 @@ class SupabaseGateway:
         return rows[0] if rows else {"id": user_id, "tier": "free"}
 
     def table(self, name: str):
-        return self.require_service().table(name)
+        client = self.service_client or self.auth_client
+        if not client:
+            raise RuntimeError("Supabase is not configured.")
+        return client.table(name)
 
     def rpc(self, name: str, params: dict[str, Any]):
         return self.require_service().rpc(name, params).execute().data

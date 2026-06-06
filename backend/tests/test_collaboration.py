@@ -29,6 +29,7 @@ class FakeGateway:
     def __init__(self):
         self.row = {"id": "molecule-1", "name": "Ethanol", "is_public": True, "share_token": "token-1"}
         self.rpc_calls = []
+        self.service_available = True
 
     def table(self, name):
         assert name == "molecules"
