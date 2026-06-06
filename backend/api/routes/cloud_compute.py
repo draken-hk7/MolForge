@@ -92,7 +92,7 @@ async def cloud_stats(request: Request) -> dict[str, Any]:
 @router.get("/jobs")
 async def recent_jobs(request: Request, authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
     user = optional_user(request, authorization)
-    return manager(request).recent_jobs(user["id"] if user else None)
+    return manager(request).recent_jobs(user["id"]) if user else []
 
 
 @router.post("/batch")

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { cn } from '../../utils/classNames';
 import { deltaTone, formatDelta, formatPropertyValue } from '../../utils/propertyFormatters';
+import AccuracyBadge from '../CloudCompute/AccuracyBadge';
 import ConfidenceBar from './ConfidenceBar';
 
 /**
@@ -10,7 +11,7 @@ import ConfidenceBar from './ConfidenceBar';
  * @param {object} props Component props.
  * @returns {JSX.Element} Property card.
  */
-export default function PropertyCard({ propertyKey, label, value, unit, confidence, color, delta }) {
+export default function PropertyCard({ propertyKey, label, value, unit, confidence, color, delta, source = 'ml', method = '', note = '' }) {
   const [flash, setFlash] = useState(false);
   const tone = deltaTone(propertyKey, delta);
   const TrendIcon = tone === 'positive' ? TrendingUp : tone === 'negative' ? TrendingDown : Minus;
@@ -30,7 +31,7 @@ export default function PropertyCard({ propertyKey, label, value, unit, confiden
           <h3 className="text-sm font-semibold text-slate-200">{label}</h3>
           <p className="text-xs text-slate-500">{unit}</p>
         </div>
-        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+        <div className="flex items-center gap-2"><AccuracyBadge source={source} method={method} note={note} /><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} /></div>
       </div>
       <div className="mb-3 flex items-end justify-between gap-3">
         <div className={cn('min-w-0 font-mono text-2xl font-bold', missing ? 'text-slate-500 italic' : 'text-white')}>{formattedValue}</div>
@@ -49,6 +50,7 @@ export default function PropertyCard({ propertyKey, label, value, unit, confiden
         )}
       </div>
       <ConfidenceBar confidence={confidence} />
+      {note && <p className="mt-2 text-[10px] leading-relaxed text-slate-500">{note}</p>}
     </article>
   );
 }

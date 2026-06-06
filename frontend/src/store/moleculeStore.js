@@ -43,6 +43,12 @@ export const useMoleculeStore = create(
         set({ currentSmiles, modifiedSmiles: '', modifiedProperties: null, mpData: null, selectedMPMaterial: null, error: '' }),
       setMolecule: (currentMolecule) => set({ currentMolecule }),
       setProperties: (currentProperties) => set({ currentProperties }),
+      mergeCloudProperties: (cloudProperties) =>
+        set((state) =>
+          state.modifiedSmiles
+            ? { modifiedProperties: { ...(state.modifiedProperties || {}), ...(cloudProperties || {}) } }
+            : { currentProperties: { ...(state.currentProperties || {}), ...(cloudProperties || {}) } }
+        ),
       setModifiedSmiles: (modifiedSmiles) => set({ modifiedSmiles }),
       setModifiedProperties: (modifiedProperties) => set({ modifiedProperties }),
       setMpData: (mpData) => set({ mpData }),
