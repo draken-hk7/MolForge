@@ -206,3 +206,43 @@ export async function clearMPCache() {
   const { data } = await api.post('/api/mp/clear-cache');
   return data;
 }
+
+export async function getProteinStatus() {
+  const { data } = await api.get('/api/proteins/status');
+  return data;
+}
+
+export async function analyzeProteinSequence(sequence) {
+  const { data } = await api.post('/api/proteins/analyze-sequence', { sequence });
+  return data;
+}
+
+export async function predictProteinStructure(sequence) {
+  const { data } = await api.post('/api/proteins/predict', { sequence });
+  return data;
+}
+
+export async function searchUniprotProteins(query, limit = 10) {
+  const { data } = await api.get('/api/proteins/search-uniprot', { params: { q: query, limit } });
+  return data;
+}
+
+export async function getUniprotProtein(uniprotId) {
+  const { data } = await api.get(`/api/proteins/uniprot/${uniprotId}`);
+  return data;
+}
+
+export async function getProteinStructureById(uniprotId) {
+  const { data } = await api.get(`/api/proteins/structure/${uniprotId}`);
+  return data;
+}
+
+export async function compareProteinStructures(sequenceA, sequenceB) {
+  const { data } = await api.post('/api/proteins/compare', { sequence_a: sequenceA, sequence_b: sequenceB });
+  return data;
+}
+
+export async function searchProteinLigands(query, limit = 8) {
+  const { data } = await api.get('/api/proteins/ligands', { params: { q: query, limit } });
+  return data;
+}

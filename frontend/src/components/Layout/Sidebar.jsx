@@ -1,4 +1,4 @@
-import { BarChart3, Database, FlaskConical, FolderOpen, History, LayoutDashboard, PencilRuler, Settings } from 'lucide-react';
+import { BarChart3, Database, Dna, FlaskConical, FolderOpen, History, LayoutDashboard, PencilRuler, Settings } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { useMoleculeStore } from '../../store/moleculeStore';
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/results', label: 'Results', icon: BarChart3 },
   { to: '/library', label: 'Library', icon: FolderOpen },
   { to: '/materials', label: 'Materials DB', icon: Database, mpDot: true },
+  { to: '/protein', label: 'Proteins', icon: Dna, proteinDot: true },
   { to: '/inverse-design', label: 'Design', icon: FlaskConical },
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
@@ -19,7 +20,7 @@ const navItems = [
  * @returns {JSX.Element} Sidebar component.
  */
 export default function Sidebar() {
-  const { sessionHistory, savedMolecules, mpStatus } = useMoleculeStore();
+  const { sessionHistory, savedMolecules, mpStatus, proteinStatus } = useMoleculeStore();
 
   return (
     <aside className="border-b border-white/10 bg-[#0d0d14]/85 px-3 py-3 backdrop-blur-xl lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-b-0 lg:border-r lg:px-4">
@@ -40,6 +41,7 @@ export default function Sidebar() {
               <Icon size={17} />
               {item.label}
               {item.mpDot && <span className={`ml-auto h-2 w-2 rounded-full ${mpStatus.key_set && mpStatus.available ? 'bg-emerald-400' : 'bg-amber-400'}`} />}
+              {item.proteinDot && <span className={`ml-auto h-2 w-2 rounded-full ${proteinStatus.esmfold_available ? 'bg-emerald-400' : 'bg-amber-400'}`} />}
             </NavLink>
           );
         })}

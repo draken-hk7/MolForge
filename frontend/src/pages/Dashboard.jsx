@@ -1,13 +1,14 @@
-import { Atom, Database, FlaskConical, PencilRuler, Sparkles } from 'lucide-react';
+import { Atom, Database, Dna, FlaskConical, PencilRuler, Sparkles } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { useMoleculeStore } from '../store/moleculeStore';
 
 const quickStarts = [
-  { to: '/editor', title: 'Start from SMILES', icon: PencilRuler },
-  { to: '/library', title: 'Browse Library', icon: Database },
-  { to: '/inverse-design', title: 'Inverse Design', icon: FlaskConical },
-  { to: '/editor', title: 'Load Sample', icon: Sparkles }
+  { to: '/editor', title: 'Start from SMILES', description: 'Build and modify molecular structures', icon: PencilRuler },
+  { to: '/library', title: 'Browse Library', description: 'Open saved molecular designs', icon: Database },
+  { to: '/protein', title: 'Protein Folding', description: 'Predict and visualize protein 3D structures', icon: Dna },
+  { to: '/inverse-design', title: 'Inverse Design', description: 'Search candidates from target properties', icon: FlaskConical },
+  { to: '/editor', title: 'Load Sample', description: 'Begin with a curated molecule', icon: Sparkles }
 ];
 
 /**
@@ -86,7 +87,10 @@ export default function Dashboard() {
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-indigo-500/15 text-indigo-200">
                     <Icon size={20} />
                   </span>
-                  <span className="font-semibold text-white">{item.title}</span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-white">{item.title}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{item.description}</span>
+                  </span>
                 </NavLink>
               );
             })}
