@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 from typing import Any
 
@@ -200,13 +201,16 @@ class ProteinPredictor:
         serial = 1
         for index, amino_acid in enumerate(sequence, start=1):
             residue = THREE_LETTER_CODES[amino_acid]
-            base_x = (index - 1) * 3.6
+            angle = math.radians((index - 1) * 100)
+            ca_x = (index - 1) * 1.5
+            ca_y = 2.3 * math.cos(angle)
+            ca_z = 2.3 * math.sin(angle)
             confidence = 55.0 + min(index % 10, 9) * 2.5
             atoms = [
-                ("N", base_x, 0.45, 0.15, "N"),
-                ("CA", base_x + 1.25, 0.0, 0.0, "C"),
-                ("C", base_x + 2.45, 0.55, -0.15, "C"),
-                ("O", base_x + 3.1, 1.25, -0.1, "O"),
+                ("N", ca_x - 0.45, ca_y + 0.7 * math.cos(angle - 0.5), ca_z + 0.7 * math.sin(angle - 0.5), "N"),
+                ("CA", ca_x, ca_y, ca_z, "C"),
+                ("C", ca_x + 0.45, ca_y + 0.7 * math.cos(angle + 0.5), ca_z + 0.7 * math.sin(angle + 0.5), "C"),
+                ("O", ca_x + 0.75, ca_y + 1.1 * math.cos(angle + 0.7), ca_z + 1.1 * math.sin(angle + 0.7), "O"),
             ]
             for atom_name, x, y, z, element in atoms:
                 lines.append(

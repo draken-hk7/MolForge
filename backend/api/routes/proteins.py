@@ -137,5 +137,11 @@ async def compare(payload: CompareRequest, request: Request) -> dict[str, Any]:
 
 @router.get("/ligands")
 async def ligands(request: Request, q: str = Query(..., min_length=1), limit: int = Query(default=8, ge=1, le=12)) -> list[dict[str, Any]]:
-    """Search PubChem for ligand-like compound names."""
-    return _uniprot(request).search_pubchem(q, limit)
+    """Search PubChem and annotate same-formula Materials Project records."""
+    results = _uniprot(request).search_pubchem(q, limit)
+    mp_client = getattr(request.app.state, "mp_client", None)
+    if mp_client is not None and getattr(mp_client, "available", False):
+        for ligand in results[:3]:
+            formula = ligand.get("molecular_formula")
+            ligand["related_materials"] = mp_client.search_by_formula(formula)[:3] if formula else []
+    return results

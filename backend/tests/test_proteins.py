@@ -77,3 +77,13 @@ def test_predict_without_key() -> None:
     assert result["method"] == "mock"
     assert result["pdb_string"].startswith("HEADER")
     assert "ATOM" in result["pdb_string"]
+
+
+def test_mock_prediction_uses_three_dimensional_backbone() -> None:
+    """The offline fallback should form a visible helix instead of a straight line."""
+    pdb_string = ProteinPredictor(api_key="").predict_structure("ACDEFGHIK")["pdb_string"]
+    alpha_carbons = [line for line in pdb_string.splitlines() if line.startswith("ATOM") and line[12:16].strip() == "CA"]
+    y_coordinates = {round(float(line[38:46]), 2) for line in alpha_carbons}
+    z_coordinates = {round(float(line[46:54]), 2) for line in alpha_carbons}
+    assert len(y_coordinates) > 3
+    assert len(z_coordinates) > 3

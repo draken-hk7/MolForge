@@ -11,6 +11,15 @@ const initialState = {
   mpStatus: { available: false, key_set: false, cache_size: 0, message: '' },
   mpMaterials: [],
   selectedMPMaterial: null,
+  proteinStatus: { esmfold_available: false, uniprot_available: true, message: '' },
+  currentProtein: null,
+  proteinStructure: null,
+  proteinProperties: null,
+  uniprotResults: [],
+  selectedUniprotEntry: null,
+  proteinHistory: [],
+  proteinLoading: false,
+  proteinError: '',
   predictionSettings: {
     autoEnrichPredictions: true,
     showMpComparison: true,
@@ -39,6 +48,27 @@ export const useMoleculeStore = create(
       setMpStatus: (mpStatus) => set({ mpStatus }),
       setMpMaterials: (mpMaterials) => set({ mpMaterials }),
       setSelectedMPMaterial: (selectedMPMaterial) => set({ selectedMPMaterial }),
+      setProteinStatus: (proteinStatus) => set({ proteinStatus }),
+      setCurrentProtein: (currentProtein) => set({ currentProtein }),
+      setProteinStructure: (proteinStructure) => set({ proteinStructure }),
+      setProteinProperties: (proteinProperties) => set({ proteinProperties }),
+      setUniprotResults: (uniprotResults) => set({ uniprotResults }),
+      setSelectedUniprotEntry: (selectedUniprotEntry) => set({ selectedUniprotEntry }),
+      setProteinLoading: (proteinLoading) => set({ proteinLoading }),
+      setProteinError: (proteinError) => set({ proteinError: proteinError || '' }),
+      addToProteinHistory: (entry) =>
+        set((state) => ({
+          proteinHistory: [
+            {
+              id: entry.id || crypto.randomUUID(),
+              timestamp: entry.timestamp || new Date().toISOString(),
+              name: entry.name || 'Protein structure',
+              sequence: entry.sequence || '',
+              method: entry.method || 'unknown'
+            },
+            ...state.proteinHistory
+          ].slice(0, 20)
+        })),
       setPredictionSetting: (key, value) =>
         set((state) => ({
           predictionSettings: { ...state.predictionSettings, [key]: value }
