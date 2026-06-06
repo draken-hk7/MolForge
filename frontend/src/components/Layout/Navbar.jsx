@@ -24,7 +24,7 @@ export default function Navbar() {
             <Server size={14} /> Local ML
           </span>
           <a
-            href="https://github.com"
+            href="https://github.com/draken-hk7/MolForge"
             className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300 transition hover:border-indigo-400/50 hover:text-white"
           >
             <Github size={14} /> Source

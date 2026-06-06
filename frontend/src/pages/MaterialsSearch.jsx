@@ -68,9 +68,9 @@ export default function MaterialsSearch() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / 20));
   const pageRows = filtered.slice((page - 1) * 20, page * 20);
 
-  const handleSelect = async (material) => {
+  const handleSelect = async (material, options = {}) => {
     setSelectedMPMaterial(material);
-    if (material.material_id) {
+    if (!options.skipFetch && material.material_id) {
       await getMaterialDetail(material.material_id).catch(() => material);
     }
   };

@@ -83,6 +83,27 @@ export function useMaterialsProject() {
     [setMpMaterials, setSelectedMPMaterial]
   );
 
+  const searchByMaterialId = useCallback(
+    async (id) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const material = await getMPMaterial(id);
+        setMpMaterials(material ? [material] : []);
+        setSelectedMPMaterial(material || null);
+        return material;
+      } catch (err) {
+        setError(err.message);
+        setMpMaterials([]);
+        setSelectedMPMaterial(null);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setMpMaterials, setSelectedMPMaterial]
+  );
+
   const getMaterialDetail = useCallback(
     async (id) => {
       setLoading(true);
@@ -154,6 +175,7 @@ export function useMaterialsProject() {
     error,
     searchByFormula,
     searchByElements,
+    searchByMaterialId,
     getMaterialDetail,
     enrichPrediction,
     setApiKey,

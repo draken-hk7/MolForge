@@ -119,7 +119,7 @@ class MaterialsProjectClient:
         cached = self._get_cached(cache_key)
         if cached is not None:
             return cached
-        payload = self._request_json(f"/materials/summary/{material_id}", {"_fields": ",".join(SUMMARY_FIELDS)})
+        payload = self._request_json("/materials/summary/", {"material_ids": material_id, "_fields": ",".join(SUMMARY_FIELDS)})
         data = self._extract_data(payload)
         item = data[0] if isinstance(data, list) and data else data if isinstance(data, dict) else None
         normalized = self._normalize_material(item) if item else None
