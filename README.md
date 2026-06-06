@@ -115,6 +115,24 @@ VITE_MIXPANEL_TOKEN=
 
 The frontend uses RLS-safe direct Supabase fallbacks for user-owned operations when the backend service role is not configured. Add the service-role key to enable privileged backend operations, automatic counters, and durable cloud-job caching.
 
+## Phase D: Cloud DFT Accuracy Engine
+
+Phase D adds optional GFN2-xTB quantum-chemistry screening on Oracle, GCP, or a local xTB installation. Local ML predictions still appear immediately. MolForge then submits a cloud job automatically, polls its progress, and replaces matching properties when the calculation completes.
+
+New capabilities:
+
+- Gas-phase and ALPB-water xTB single-point calculations
+- Oracle, GCP SSH, and local xTB provider routing
+- Persistent Supabase result cache and Native AI feedback records
+- Free, Early Access, Plus, Max, and Admin daily job limits
+- Live calculation progress, ETA, method badges, and ML fallback
+- Provider, job, cache, method-confidence, and batch-compute dashboard
+- 100-molecule precompute utility at `backend/scripts/precompute_common.py`
+
+Cloud values distinguish xTB-native results from derived screening proxies. GFN2-xTB HOMO-LUMO gaps are molecular screening quantities, not periodic experimental band gaps. Solubility, conductivity, refractive index, and mechanical hardness require additional physical data and are never presented as universally accurate xTB outputs.
+
+See [CLOUD_SETUP.md](CLOUD_SETUP.md) for Oracle/GCP setup, security guidance, testing, and scientific interpretation.
+
 ### Free Compute Setup
 
 Oracle Always Free:
