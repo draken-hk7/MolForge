@@ -75,7 +75,19 @@ export default function PropertyPanel({ onPredict, cloud = null }) {
       ) : entries.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
           {entries.map((entry) => (
-            <PropertyCard key={entry.key} propertyKey={entry.key} delta={deltas[entry.key]} {...entry} />
+            <PropertyCard
+              key={entry.key}
+              propertyKey={entry.key}
+              delta={deltas[entry.key]}
+              label={entry.label}
+              value={entry.value}
+              unit={entry.unit}
+              confidence={entry.confidence}
+              color={entry.color}
+              source={entry.source}
+              method={entry.method}
+              note={entry.note}
+            />
           ))}
         </div>
       ) : (
