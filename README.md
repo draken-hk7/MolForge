@@ -58,6 +58,23 @@ Fallback behavior:
 - If MP is unreachable, rate limited, or returns no formula match, the UI keeps the ML prediction path.
 - MP requests use a 5 second timeout and an in-memory TTL cache to avoid repeated queries.
 
+## Phase B: Protein Folding
+
+Phase B adds ESMFold protein structure prediction and NGL 3D visualization.
+
+New capabilities:
+
+- `/protein` page for sequence input and 3D viewing
+- ESMFold via Hugging Face API (`HF_API_KEY` in `.env`)
+- UniProt search and RCSB experimental structures
+- Protein property analysis via BioPython
+- PubChem ligand search
+- Protein comparison side by side
+- PDB export
+
+Add `HF_API_KEY=hf_your_token` to `backend/.env`.
+Get a free token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
+
 ## Phase C: Collaboration, Feedback, and Cloud Accuracy
 
 Phase C adds optional Supabase-backed accounts and research collaboration while preserving MolForge's login-free local workflow.
