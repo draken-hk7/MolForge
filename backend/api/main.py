@@ -11,7 +11,21 @@ from fastapi import FastAPI
 
 from api.middleware.cors import configure_cors
 from api.middleware.error_handler import global_exception_handler
-from api.routes import inverse_design, materials_project, molecules, properties, proteins, simulation
+from api.middleware.rate_limit import configure_rate_limiting
+from api.routes import (
+    auth,
+    cloud_compute,
+    collaboration,
+    community,
+    feedback,
+    inverse_design,
+    materials_project,
+    molecules,
+    properties,
+    proteins,
+    simulation,
+)
+from core.cloud_compute.job_manager import CloudJobManager
 from core.inverse_design_engine import InverseDesignEngine
 from core.materials_project_client import MaterialsProjectClient
 from core.molecular_dynamics import MolecularDynamicsRunner
@@ -21,6 +35,8 @@ from core.property_predictor import PropertyPredictor
 from core.protein_analyzer import ProteinAnalyzer
 from core.protein_predictor import ProteinPredictor
 from core.structure_optimizer import StructureOptimizer
+from core.supabase_client import get_gateway
+from core.telemetry import configure_sentry
 from core.uniprot_client import UniProtClient
 
 
@@ -37,6 +53,7 @@ def _load_env_file(path: Path) -> None:
 
 
 _load_env_file(Path(__file__).resolve().parents[1] / ".env")
+configure_sentry()
 
 
 @asynccontextmanager
@@ -62,6 +79,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.protein_predictor = ProteinPredictor()
     app.state.protein_analyzer = ProteinAnalyzer()
     app.state.uniprot_client = UniProtClient()
+    app.state.supabase = get_gateway()
+    app.state.cloud_job_manager = CloudJobManager(gateway=app.state.supabase)
     yield
 
 
@@ -73,6 +92,7 @@ app = FastAPI(
 )
 
 configure_cors(app)
+configure_rate_limiting(app)
 app.add_exception_handler(Exception, global_exception_handler)
 
 app.include_router(molecules.router)
@@ -81,6 +101,11 @@ app.include_router(simulation.router)
 app.include_router(inverse_design.router)
 app.include_router(materials_project.router)
 app.include_router(proteins.router)
+app.include_router(auth.router)
+app.include_router(collaboration.router)
+app.include_router(community.router)
+app.include_router(feedback.router)
+app.include_router(cloud_compute.router)
 
 
 @app.get("/health")

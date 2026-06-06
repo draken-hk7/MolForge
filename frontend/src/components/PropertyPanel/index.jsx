@@ -7,6 +7,7 @@ import { useProperties } from '../../hooks/useProperties';
 import { useMoleculeStore } from '../../store/moleculeStore';
 import { propertyEntries } from '../../utils/propertyFormatters';
 import PropertyCard from './PropertyCard';
+import PredictionRating from '../Feedback/PredictionRating';
 
 /**
  * Render material property predictions for the active molecule.
@@ -14,7 +15,7 @@ import PropertyCard from './PropertyCard';
  */
 export default function PropertyPanel() {
   const { currentProperties, modifiedProperties, mpData, isLoading, error, predictActiveProperties } = useProperties();
-  const { predictionSettings } = useMoleculeStore();
+  const { predictionSettings, activeCloudMolecule } = useMoleculeStore();
   const [viewMode, setViewMode] = useState('auto');
   const displayProperties = modifiedProperties || currentProperties;
   const entries = propertyEntries(displayProperties);
@@ -82,6 +83,7 @@ export default function PropertyPanel() {
           <p className="mt-1 text-sm text-slate-400">Property predictions will appear after a molecule is loaded.</p>
         </div>
       )}
+      {entries.length > 0 && <PredictionRating moleculeId={activeCloudMolecule?.id} properties={displayProperties} />}
     </section>
   );
 }

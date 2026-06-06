@@ -1,8 +1,9 @@
-import { BarChart3, Database, Dna, FlaskConical, FolderOpen, History, LayoutDashboard, PencilRuler, Settings } from 'lucide-react';
+import { BarChart3, Cloud, Compass, Database, Dna, FlaskConical, FolderOpen, History, LayoutDashboard, PencilRuler, Settings, ShieldCheck, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { useMoleculeStore } from '../../store/moleculeStore';
 import { cn } from '../../utils/classNames';
+import { useAuth } from '../../hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -12,6 +13,9 @@ const navItems = [
   { to: '/materials', label: 'Materials DB', icon: Database, mpDot: true },
   { to: '/protein', label: 'Proteins', icon: Dna, proteinDot: true },
   { to: '/inverse-design', label: 'Design', icon: FlaskConical },
+  { to: '/explore', label: 'Explore', icon: Compass },
+  { to: '/workspaces', label: 'Workspaces', icon: Users },
+  { to: '/cloud', label: 'Cloud', icon: Cloud },
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
 
@@ -21,11 +25,13 @@ const navItems = [
  */
 export default function Sidebar() {
   const { sessionHistory, savedMolecules, mpStatus, proteinStatus } = useMoleculeStore();
+  const auth = useAuth();
+  const items = auth.profile?.tier === 'admin' ? [...navItems, { to: '/admin', label: 'Admin', icon: ShieldCheck }] : navItems;
 
   return (
     <aside className="border-b border-white/10 bg-[#0d0d14]/85 px-3 py-3 backdrop-blur-xl lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-b-0 lg:border-r lg:px-4">
       <nav className="mx-auto flex max-w-[1600px] gap-2 overflow-x-auto lg:mx-0 lg:block lg:space-y-2 lg:overflow-visible">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           return (
             <NavLink

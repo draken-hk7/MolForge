@@ -27,6 +27,7 @@ const initialState = {
   },
   sessionHistory: [],
   savedMolecules: [],
+  activeCloudMolecule: null,
   isLoading: false,
   error: ''
 };
@@ -102,6 +103,7 @@ export const useMoleculeStore = create(
             savedMolecules: [record, ...state.savedMolecules.filter((item) => item.smiles !== record.smiles)]
           };
         }),
+      setActiveCloudMolecule: (activeCloudMolecule) => set({ activeCloudMolecule }),
       removeSavedMolecule: (id) =>
         set((state) => ({
           savedMolecules: state.savedMolecules.filter((item) => item.id !== id)

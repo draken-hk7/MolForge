@@ -5,6 +5,8 @@ from __future__ import annotations
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+from core.telemetry import capture_exception
+
 
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Return a consistent JSON payload for unhandled server errors.
@@ -16,6 +18,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     Returns:
         A JSONResponse with an error message and HTTP status code 500.
     """
+    capture_exception(exc, {"method": request.method, "path": request.url.path})
     return JSONResponse(
         status_code=500,
         content={"error": str(exc), "status": 500},

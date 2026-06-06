@@ -1,6 +1,7 @@
 import { Atom, FlaskConical, Github, Server } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import MPStatusBadge from '../MaterialsProject/MPStatusBadge';
+import UserMenu from '../Auth/UserMenu';
 
 /**
  * Render the top navigation bar.
@@ -36,7 +37,9 @@ export default function Navbar() {
           >
             <FlaskConical size={16} /> Inverse Design
           </NavLink>
+          <UserMenu />
         </div>
+        <div className="md:hidden"><UserMenu /></div>
       </div>
     </header>
   );

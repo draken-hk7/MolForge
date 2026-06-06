@@ -1,4 +1,4 @@
-import { Download, GitCompare, History, Save, Wand2 } from 'lucide-react';
+import { Cloud, Download, GitCompare, History, Save, Wand2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,8 +10,13 @@ import HistoryLog from '../components/ResultsViewer/HistoryLog';
 import SimulationControls from '../components/SimulationControls';
 import { useMolecule } from '../hooks/useMolecule';
 import { useProperties } from '../hooks/useProperties';
+import { useAuth } from '../hooks/useAuth';
+import { useCloudCompute } from '../hooks/useCloudCompute';
+import { useCollaboration } from '../hooks/useCollaboration';
 import { useMoleculeStore } from '../store/moleculeStore';
 import { exportToJSON, exportToSDF } from '../utils/exportUtils';
+import ShareButton from '../components/Collaboration/ShareButton';
+import CloudJobStatus from '../components/CloudCompute/CloudJobStatus';
 
 const groups = ['OH', 'NH2', 'COOH', 'CH3', 'F', 'Cl', 'Br'];
 
@@ -21,7 +26,10 @@ const groups = ['OH', 'NH2', 'COOH', 'CH3', 'F', 'Cl', 'Br'];
  */
 export default function Editor() {
   const navigate = useNavigate();
-  const { currentMolecule, currentSmiles, currentProperties, modifiedSmiles, modifiedProperties, saveMolecule, setError } = useMoleculeStore();
+  const { currentMolecule, currentSmiles, currentProperties, modifiedSmiles, modifiedProperties, mpData, activeCloudMolecule, saveMolecule, setActiveCloudMolecule, setError } = useMoleculeStore();
+  const auth = useAuth();
+  const collaboration = useCollaboration();
+  const cloud = useCloudCompute();
   const { mutate, addGroup } = useMolecule();
   const { predictActiveProperties } = useProperties();
   const [selectedAtom, setSelectedAtom] = useState('C');
@@ -30,7 +38,7 @@ export default function Editor() {
   const activeSmiles = modifiedSmiles || currentSmiles;
   const activeProperties = modifiedProperties || currentProperties;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!activeSmiles) {
       setError('Load a molecule before saving.');
       return;
@@ -42,6 +50,16 @@ export default function Editor() {
       molecule: currentMolecule,
       properties: activeProperties
     });
+    if (auth.user) {
+      try {
+        const cloudRecord = await collaboration.saveMolecule({ name, smiles: activeSmiles, mol_data: currentMolecule || {}, properties: activeProperties || {}, mp_data: mpData || {}, tags: [] });
+        setActiveCloudMolecule(cloudRecord);
+      } catch (error) {
+        setError(error.message);
+      }
+    } else {
+      auth.openAuth();
+    }
   };
 
   const handleExportJson = () => {
@@ -77,6 +95,10 @@ export default function Editor() {
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={handleSave} className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 transition hover:border-indigo-400/50">
             <Save size={16} /> Save
+          </button>
+          <ShareButton molecule={activeCloudMolecule} />
+          <button type="button" disabled={!activeSmiles} onClick={() => cloud.submit(activeSmiles, activeCloudMolecule?.id)} className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100 transition hover:border-emerald-400/50 disabled:opacity-50">
+            <Cloud size={16} /> Accurate
           </button>
           <button type="button" onClick={handleExportJson} className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 transition hover:border-indigo-400/50">
             <Download size={16} /> JSON
@@ -134,6 +156,7 @@ export default function Editor() {
         </div>
         <div className="space-y-4">
           <Viewer3D molblock={currentMolecule?.molblock} />
+          <CloudJobStatus job={cloud.job} error={cloud.error} />
           <SimulationControls />
         </div>
         <div className="space-y-4 xl:col-span-2 2xl:col-span-1">
