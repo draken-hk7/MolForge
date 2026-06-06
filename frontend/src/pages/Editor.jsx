@@ -1,5 +1,5 @@
-import { Cloud, Download, GitCompare, History, Save, Wand2 } from 'lucide-react';
-import { useState } from 'react';
+import { Cloud, CloudOff, Download, GitCompare, History, Save, Wand2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AtomPicker from '../components/MoleculeEditor/AtomPicker';
@@ -16,7 +16,6 @@ import { useCollaboration } from '../hooks/useCollaboration';
 import { useMoleculeStore } from '../store/moleculeStore';
 import { exportToJSON, exportToSDF } from '../utils/exportUtils';
 import ShareButton from '../components/Collaboration/ShareButton';
-import CloudJobStatus from '../components/CloudCompute/CloudJobStatus';
 
 const groups = ['OH', 'NH2', 'COOH', 'CH3', 'F', 'Cl', 'Br'];
 
@@ -26,10 +25,11 @@ const groups = ['OH', 'NH2', 'COOH', 'CH3', 'F', 'Cl', 'Br'];
  */
 export default function Editor() {
   const navigate = useNavigate();
-  const { currentMolecule, currentSmiles, currentProperties, modifiedSmiles, modifiedProperties, mpData, activeCloudMolecule, saveMolecule, setActiveCloudMolecule, setError } = useMoleculeStore();
+  const { currentMolecule, currentSmiles, currentProperties, modifiedSmiles, modifiedProperties, mpData, activeCloudMolecule, saveMolecule, setActiveCloudMolecule, setError, mergeCloudProperties } = useMoleculeStore();
   const auth = useAuth();
   const collaboration = useCollaboration();
   const cloud = useCloudCompute();
+  const { loadStats } = cloud;
   const { mutate, addGroup } = useMolecule();
   const { predictActiveProperties } = useProperties();
   const [selectedAtom, setSelectedAtom] = useState('C');
@@ -37,6 +37,16 @@ export default function Editor() {
   const [showHistory, setShowHistory] = useState(false);
   const activeSmiles = modifiedSmiles || currentSmiles;
   const activeProperties = modifiedProperties || currentProperties;
+  const cloudAvailable = Boolean(cloud.providers?.any_available);
+
+  useEffect(() => { loadStats(); }, [loadStats]);
+
+  const handlePredict = async () => {
+    const prediction = await predictActiveProperties();
+    if (!activeSmiles) return prediction;
+    await cloud.submitJob(activeSmiles, activeCloudMolecule?.id, (result) => mergeCloudProperties(result?.properties));
+    return prediction;
+  };
 
   const handleSave = async () => {
     if (!activeSmiles) {
@@ -91,15 +101,13 @@ export default function Editor() {
           <p className="mt-1 max-w-[min(72vw,48rem)] truncate font-mono text-sm text-indigo-200" title={activeSmiles || 'No molecule loaded'}>
             {activeSmiles || 'No molecule loaded'}
           </p>
+          <div className={`mt-2 inline-flex items-center gap-1.5 text-xs ${cloudAvailable ? 'text-emerald-300' : 'text-slate-500'}`}>{cloudAvailable ? <Cloud size={13} /> : <CloudOff size={13} />}{cloudAvailable ? `Cloud compute: ${cloud.provider || 'connected'}` : 'Cloud compute: offline (ML only)'}</div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={handleSave} className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 transition hover:border-indigo-400/50">
             <Save size={16} /> Save
           </button>
           <ShareButton molecule={activeCloudMolecule} />
-          <button type="button" disabled={!activeSmiles} onClick={() => cloud.submit(activeSmiles, activeCloudMolecule?.id)} className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100 transition hover:border-emerald-400/50 disabled:opacity-50">
-            <Cloud size={16} /> Accurate
-          </button>
           <button type="button" onClick={handleExportJson} className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 transition hover:border-indigo-400/50">
             <Download size={16} /> JSON
           </button>
@@ -156,11 +164,10 @@ export default function Editor() {
         </div>
         <div className="space-y-4">
           <Viewer3D molblock={currentMolecule?.molblock} />
-          <CloudJobStatus job={cloud.job} error={cloud.error} />
           <SimulationControls />
         </div>
         <div className="space-y-4 xl:col-span-2 2xl:col-span-1">
-          <PropertyPanel />
+          <PropertyPanel onPredict={handlePredict} cloud={cloud} />
           {showHistory && <HistoryLog />}
         </div>
       </div>

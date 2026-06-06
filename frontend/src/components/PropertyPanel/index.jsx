@@ -8,12 +8,13 @@ import { useMoleculeStore } from '../../store/moleculeStore';
 import { propertyEntries } from '../../utils/propertyFormatters';
 import PropertyCard from './PropertyCard';
 import PredictionRating from '../Feedback/PredictionRating';
+import CloudJobStatus from '../CloudCompute/CloudJobStatus';
 
 /**
  * Render material property predictions for the active molecule.
  * @returns {JSX.Element} Property panel.
  */
-export default function PropertyPanel() {
+export default function PropertyPanel({ onPredict, cloud = null }) {
   const { currentProperties, modifiedProperties, mpData, isLoading, error, predictActiveProperties } = useProperties();
   const { predictionSettings, activeCloudMolecule } = useMoleculeStore();
   const [viewMode, setViewMode] = useState('auto');
@@ -50,7 +51,7 @@ export default function PropertyPanel() {
           )}
           <button
             type="button"
-            onClick={predictActiveProperties}
+            onClick={onPredict || predictActiveProperties}
             disabled={isLoading}
             className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -61,6 +62,7 @@ export default function PropertyPanel() {
       </div>
 
       {error && <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>}
+      {cloud && <div className="mb-4"><CloudJobStatus job={cloud.job} error={cloud.error} progress={cloud.progress} eta={cloud.eta} /></div>}
 
       {showMpData ? (
         <MPComparisonView mpData={mpData} />
@@ -73,7 +75,19 @@ export default function PropertyPanel() {
       ) : entries.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
           {entries.map((entry) => (
-            <PropertyCard key={entry.key} propertyKey={entry.key} delta={deltas[entry.key]} {...entry} />
+            <PropertyCard
+              key={entry.key}
+              propertyKey={entry.key}
+              delta={deltas[entry.key]}
+              label={entry.label}
+              value={entry.value}
+              unit={entry.unit}
+              confidence={entry.confidence}
+              color={entry.color}
+              source={entry.source}
+              method={entry.method}
+              note={entry.note}
+            />
           ))}
         </div>
       ) : (
