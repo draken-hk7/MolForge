@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from api.routes.auth import record_prediction
 from core.materials_project_client import MaterialsProjectClient
 from core.property_reconciler import PropertyReconciler
 from core.property_predictor import PropertyPredictor
+from core.telemetry import track
 
 
 router = APIRouter(prefix="/api/properties", tags=["properties"])
@@ -65,7 +67,12 @@ def _reconciler(request: Request) -> PropertyReconciler:
 
 
 @router.post("/predict")
-async def predict_properties(payload: PredictRequest, request: Request, mp: bool = True) -> dict[str, Any]:
+async def predict_properties(
+    payload: PredictRequest,
+    request: Request,
+    mp: bool = True,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Predict material properties for a molecule.
 
     Args:
@@ -76,6 +83,7 @@ async def predict_properties(payload: PredictRequest, request: Request, mp: bool
         Property prediction payload.
     """
     try:
+        user = record_prediction(request, authorization)
         predictions = _predictor(request).predict(payload.smiles)
         response: dict[str, Any] = {"smiles": payload.smiles, "properties": predictions, "mp_data": None}
         if mp:
@@ -85,9 +93,40 @@ async def predict_properties(payload: PredictRequest, request: Request, mp: bool
             reconciled = _reconciler(request).reconcile(predictions, mp_results, formula=formula)
             reconciled["formula"] = formula
             response["mp_data"] = reconciled
+            _store_mp_feedback(request, user, reconciled)
+        track(
+            user["id"] if user else "anonymous",
+            "molecule_predicted",
+            {"tier": user["profile"].get("tier") if user else "anonymous", "has_mp_data": bool(response["mp_data"] and response["mp_data"].get("best_match")), "has_cloud_data": False},
+        )
         return response
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def _store_mp_feedback(request: Request, user: dict[str, Any] | None, reconciled: dict[str, Any]) -> None:
+    """Store MP deltas privately when the backend service client is configured."""
+    gateway = getattr(request.app.state, "supabase", None)
+    if not gateway or not gateway.service_available or not reconciled.get("best_match"):
+        return
+    rows = []
+    for property_name, values in reconciled.get("reconciled", {}).items():
+        if values.get("ml") is None or values.get("mp") is None:
+            continue
+        rows.append(
+            {
+                "user_id": user["id"] if user else None,
+                "property_name": property_name,
+                "predicted_value": values["ml"],
+                "mp_actual_value": values["mp"],
+                "source": "mp_reconcile",
+            }
+        )
+    if rows:
+        try:
+            gateway.table("predictions_feedback").insert(rows).execute()
+        except Exception:
+            return
 
 
 @router.post("/compare")
