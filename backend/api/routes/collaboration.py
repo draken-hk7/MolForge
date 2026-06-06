@@ -44,7 +44,7 @@ class CommentCreate(BaseModel):
 
 
 def gateway(request: Request):
-    return getattr(request.app.state, "supabase", get_gateway())
+    return getattr(request.app.state, "supabase", None) or get_gateway()
 
 
 @router.get("/status")

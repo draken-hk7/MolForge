@@ -27,7 +27,7 @@ class Batch(BaseModel):
 
 
 def manager(request: Request) -> CloudJobManager:
-    return getattr(request.app.state, "cloud_job_manager", CloudJobManager())
+    return getattr(request.app.state, "cloud_job_manager", None) or CloudJobManager()
 
 
 @router.post("/submit")

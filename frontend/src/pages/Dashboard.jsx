@@ -1,4 +1,4 @@
-import { Atom, Database, Dna, FlaskConical, PencilRuler, Sparkles } from 'lucide-react';
+import { Atom, Cloud, Compass, Database, Dna, FlaskConical, PencilRuler, Sparkles } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { useMoleculeStore } from '../store/moleculeStore';
@@ -8,6 +8,8 @@ const quickStarts = [
   { to: '/library', title: 'Browse Library', description: 'Open saved molecular designs', icon: Database },
   { to: '/protein', title: 'Protein Folding', description: 'Predict and visualize protein 3D structures', icon: Dna },
   { to: '/inverse-design', title: 'Inverse Design', description: 'Search candidates from target properties', icon: FlaskConical },
+  { to: '/explore', title: 'Explore Community', description: 'Fork public molecular designs', icon: Compass },
+  { to: '/cloud', title: 'Cloud Accuracy', description: 'Run optional xTB calculations', icon: Cloud },
   { to: '/editor', title: 'Load Sample', description: 'Begin with a curated molecule', icon: Sparkles }
 ];
 

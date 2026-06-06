@@ -11,7 +11,13 @@ export default defineConfig({
           ngl: ['ngl'],
           recharts: ['recharts'],
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          zustand: ['zustand']
+          zustand: ['zustand'],
+          supabase: ['@supabase/supabase-js'],
+          sentry: ['@sentry/react'],
+          mixpanel: ['mixpanel-browser'],
+          qrcode: ['qrcode.react'],
+          axios: ['axios'],
+          icons: ['lucide-react']
         }
       }
     }

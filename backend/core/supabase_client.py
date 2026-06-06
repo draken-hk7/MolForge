@@ -19,8 +19,16 @@ class SupabaseGateway:
         self.url = (url if url is not None else os.getenv("SUPABASE_URL", "")).strip()
         self.anon_key = (anon_key if anon_key is not None else os.getenv("SUPABASE_KEY", "")).strip()
         self.service_key = (service_key if service_key is not None else os.getenv("SUPABASE_SERVICE_KEY", "")).strip()
-        self.auth_client = create_client(self.url, self.anon_key) if create_client and self.url and self.anon_key else None
-        self.service_client = create_client(self.url, self.service_key) if create_client and self.url and self.service_key else None
+        self.auth_client = self._create(self.anon_key)
+        self.service_client = self._create(self.service_key)
+
+    def _create(self, key: str) -> Client | None:
+        if not create_client or not self.url or not key:
+            return None
+        try:
+            return create_client(self.url, key)
+        except Exception:
+            return None
 
     @property
     def auth_available(self) -> bool:
@@ -55,6 +63,8 @@ class SupabaseGateway:
         return {"id": str(user.id), "email": user.email, "metadata": user.user_metadata or {}}
 
     def profile(self, user_id: str) -> dict[str, Any]:
+        if not self.service_available:
+            return {"id": user_id, "tier": "free", "predictions_today": 0, "predictions_total": 0}
         rows = self.require_service().table("profiles").select("*").eq("id", user_id).limit(1).execute().data
         return rows[0] if rows else {"id": user_id, "tier": "free"}
 

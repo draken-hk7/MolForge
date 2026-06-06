@@ -1,0 +1,14 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useAuth } from '../../hooks/useAuth';
+
+export default function Login() {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (auth.user) navigate('/profile');
+    else auth.openAuth();
+  }, [auth, navigate]);
+  return <div className="py-16 text-center text-sm text-slate-400">Sign in to continue.</div>;
+}

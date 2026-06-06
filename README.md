@@ -1,11 +1,11 @@
 # MolForge
 
-MolForge is a molecular material designer for interactive SMILES parsing, 3D visualization, atom and functional group edits, local property prediction, inverse design, and original-versus-modified comparison.
+MolForge is a collaborative molecular material designer for interactive SMILES parsing, 3D visualization, atom and functional group edits, local and cloud-assisted property prediction, inverse design, and shared research workflows.
 
 ## Stack
 
 - Frontend: React 18, Vite, Tailwind CSS, Zustand, Recharts, React Router, Axios, 3Dmol.js
-- Backend: Python 3.11, FastAPI, Pydantic v2, Materials Project API, optional RDKit, optional DeepChem on compatible Python versions, optional ASE, optional scikit-optimize
+- Backend: Python 3.11, FastAPI, Pydantic v2, Supabase, Materials Project API, optional RDKit, xTB, Oracle, GCP, DeepChem, ASE, and scikit-optimize
 - Deployment: Docker Compose with nginx proxying `/api/*` to FastAPI
 
 ## Local Setup
@@ -58,6 +58,62 @@ Fallback behavior:
 - If MP is unreachable, rate limited, or returns no formula match, the UI keeps the ML prediction path.
 - MP requests use a 5 second timeout and an in-memory TTL cache to avoid repeated queries.
 
+## Phase C: Collaboration, Feedback, and Cloud Accuracy
+
+Phase C adds optional Supabase-backed accounts and research collaboration while preserving MolForge's login-free local workflow.
+
+- Supabase Auth: email/password, magic link, Google OAuth, and GitHub OAuth
+- Cloud molecule library, public share links, QR codes, forks, comments, and workspaces
+- Public `/explore` gallery with search and popularity sorting
+- Private prediction ratings and value corrections for Native AI training
+- Automatic Materials Project reconciliation feedback
+- Optional local xTB, Oracle Always Free, GCP, Colab, and Kaggle compute paths
+- Sentry error monitoring and Mixpanel event tracking when configured
+
+The live Supabase schema is reproducible from `supabase/migrations/20260606150000_phase_c_collaboration.sql`. All public tables have Row Level Security. Frontend code uses only a publishable/anon key. Never expose `SUPABASE_SERVICE_KEY` to the frontend.
+
+### Phase C Environment
+
+Add these values to ignored `.env` files:
+
+```bash
+# backend/.env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_legacy_anon_jwt_key
+SUPABASE_SERVICE_KEY=your_service_role_key
+SENTRY_DSN=
+MIXPANEL_TOKEN=
+ORACLE_HOST=
+ORACLE_USER=ubuntu
+ORACLE_SSH_KEY_PATH=
+GCP_PROJECT_ID=
+GCP_CREDENTIALS_PATH=
+
+# frontend/.env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_publishable_key
+VITE_SENTRY_DSN=
+VITE_MIXPANEL_TOKEN=
+```
+
+The frontend uses RLS-safe direct Supabase fallbacks for user-owned operations when the backend service role is not configured. Add the service-role key to enable privileged backend operations, automatic counters, and durable cloud-job caching.
+
+### Free Compute Setup
+
+Oracle Always Free:
+
+1. Create an Ampere A1 Ubuntu instance and add your SSH public key.
+2. Install xTB on the instance and verify `xtb --version`.
+3. Set `ORACLE_HOST`, `ORACLE_USER`, and `ORACLE_SSH_KEY_PATH` in `backend/.env`.
+
+Google Cloud:
+
+1. Create a GCP project and enable Compute Engine using the free-trial credits.
+2. Create a least-privilege service account and download its JSON credentials.
+3. Set `GCP_PROJECT_ID` and `GCP_CREDENTIALS_PATH` in `backend/.env`.
+
+The generated Colab training notebook is at `ml/training/MolForge_Native_AI_Training.ipynb`. Provide `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` as private Colab secrets before running it.
+
 ## End-to-End Workflow
 
 1. Open the editor.
@@ -67,6 +123,7 @@ Fallback behavior:
 5. Modify the molecule with atom swaps or functional group additions.
 6. Compare original and modified predictions on the Results page.
 7. Save or export the design as JSON, SDF, or PDF.
+8. Sign in to sync the molecule, share it, fork community designs, submit feedback, or run optional cloud calculations.
 
 ## Docker
 
@@ -95,5 +152,6 @@ npm run build
 backend/   FastAPI routes, chemistry core, sample data, tests
 frontend/  React application and UI components
 ml/        Dataset, training, and evaluation helpers
+supabase/  Reproducible Phase C database migration and RLS policies
 docker/    Dockerfiles and nginx configuration
 ```

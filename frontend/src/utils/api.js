@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAccessToken, supabase } from '../lib/supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -8,6 +9,12 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   }
+});
+
+api.interceptors.request.use(async (config) => {
+  const token = await getAccessToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
 api.interceptors.response.use(
@@ -81,6 +88,37 @@ export async function getSamples() {
  */
 export async function predictProperties(smiles, options = {}) {
   const { data } = await api.post('/api/properties/predict', { smiles }, { params: { mp: options.mp !== false } });
+  return data;
+}
+
+export async function getPublicMolecules(params = {}) {
+  if (supabase) {
+    let query = supabase.from('molecules').select('*', { count: 'exact' }).eq('is_public', true);
+    if (params.search) query = query.or(`name.ilike.%${params.search}%,smiles.ilike.%${params.search}%`);
+    if (params.tag) query = query.contains('tags', [params.tag]);
+    const order = { most_forked: 'fork_count', most_viewed: 'view_count' }[params.sort] || 'created_at';
+    const { data, count, error } = await query.order(order, { ascending: false }).range(0, 23);
+    if (!error) return { items: data || [], total: count || 0, page: 1, page_size: 24 };
+  }
+  const { data } = await api.get('/api/community/explore', { params });
+  return data;
+}
+
+export async function getSharedMolecule(token) {
+  if (supabase) {
+    const { data, error } = await supabase.from('molecules').select('*').eq('share_token', token).eq('is_public', true).maybeSingle();
+    if (!error && data) return data;
+  }
+  const { data } = await api.get(`/api/collab/molecules/shared/${token}`);
+  return data;
+}
+
+export async function getMoleculeComments(moleculeId) {
+  if (supabase) {
+    const { data, error } = await supabase.from('comments').select('*').eq('molecule_id', moleculeId).order('created_at');
+    if (!error) return data || [];
+  }
+  const { data } = await api.get(`/api/collab/comments/${moleculeId}`);
   return data;
 }
 

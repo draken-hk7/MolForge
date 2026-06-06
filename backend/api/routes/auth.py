@@ -160,5 +160,7 @@ def record_prediction(request: Request, authorization: str | None) -> dict[str, 
     profile = user["profile"]
     if profile.get("tier") == "free" and int(profile.get("predictions_today", 0)) >= 10:
         raise HTTPException(status_code=429, detail="Free tier daily limit reached (10 predictions).")
+    if not getattr(_gateway(request), "service_available", True):
+        return user
     _gateway(request).table("profiles").update({"predictions_today": int(profile.get("predictions_today", 0)) + 1, "predictions_total": int(profile.get("predictions_total", 0)) + 1}).eq("id", user["id"]).execute()
     return user
