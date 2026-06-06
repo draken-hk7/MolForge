@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import Navbar from './components/Layout/Navbar';
@@ -7,9 +8,10 @@ import Editor from './pages/Editor';
 import InverseDesign from './pages/InverseDesign';
 import Library from './pages/Library';
 import MaterialsSearch from './pages/MaterialsSearch';
-import ProteinFolding from './pages/ProteinFolding';
 import Results from './pages/Results';
 import Settings from './pages/Settings';
+
+const ProteinFolding = lazy(() => import('./pages/ProteinFolding'));
 
 /**
  * Render the MolForge single-page application.
@@ -29,7 +31,14 @@ export default function App() {
               <Route path="/results" element={<Results />} />
               <Route path="/library" element={<Library />} />
               <Route path="/materials" element={<MaterialsSearch />} />
-              <Route path="/protein" element={<ProteinFolding />} />
+              <Route
+                path="/protein"
+                element={(
+                  <Suspense fallback={<div className="py-12 text-center text-sm text-slate-400">Loading protein workspace...</div>}>
+                    <ProteinFolding />
+                  </Suspense>
+                )}
+              />
               <Route path="/inverse-design" element={<InverseDesign />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
