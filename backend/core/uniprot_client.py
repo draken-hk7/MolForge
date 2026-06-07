@@ -12,6 +12,18 @@ except Exception:
     requests = None
 
 
+KNOWN_PDB_IDS = {
+    "P69905": "1HHO",
+    "P00533": "1IVO",
+    "P04637": "2OCJ",
+    "P68871": "1HHO",
+    "P01308": "3I40",
+    "P62988": "1UBQ",
+    "P00441": "2SOD",
+    "P02769": "1AO6",
+}
+
+
 class UniProtClient:
     """Retrieve protein records and known experimental structures."""
 
@@ -19,6 +31,7 @@ class UniProtClient:
         """Initialize the REST client."""
         self.available = requests is not None
         self.session = requests.Session() if requests is not None else None
+        self._pdb_cache: dict[str, str] = {}
         if self.session is not None:
             self.session.headers.update({"User-Agent": "MolForge/1.0 protein module"})
 
@@ -59,15 +72,44 @@ class UniProtClient:
         response.raise_for_status()
         return "".join(line.strip() for line in response.text.splitlines() if line and not line.startswith(">"))
 
-    def get_known_structure(self, pdb_id: str) -> str:
-        """Download an experimental PDB structure from RCSB."""
+    def find_pdb_ids(self, uniprot_id: str) -> list[str]:
+        """Return experimental PDB identifiers for a UniProt accession."""
+        accession = str(uniprot_id or "").strip().upper()
+        if not accession:
+            return []
+        ids: list[str] = []
+        if accession in KNOWN_PDB_IDS:
+            ids.append(KNOWN_PDB_IDS[accession])
+        legacy = self._get_json(f"https://www.ebi.ac.uk/proteins/api/proteins/{quote(accession)}")
+        current = self._get_json(f"https://rest.uniprot.org/uniprotkb/{quote(accession)}.json")
+        for payload in (legacy, current):
+            if not payload:
+                continue
+            references = payload.get("dbReferences", []) + payload.get("uniProtKBCrossReferences", [])
+            ids.extend(
+                row.get("id", "").upper()
+                for row in references
+                if row.get("database") == "PDB" and row.get("id")
+            )
+        return list(dict.fromkeys(ids))
+
+    def get_rcsb_structure(self, pdb_id: str) -> str:
+        """Download and cache an experimental PDB structure from RCSB."""
         if not self.available or self.session is None:
             raise RuntimeError("RCSB requests are unavailable.")
-        response = self.session.get(f"https://files.rcsb.org/download/{quote(pdb_id.strip().upper())}.pdb", timeout=20)
+        normalized = str(pdb_id or "").strip().upper()
+        if normalized in self._pdb_cache:
+            return self._pdb_cache[normalized]
+        response = self.session.get(f"https://files.rcsb.org/download/{quote(normalized)}.pdb", timeout=20)
         response.raise_for_status()
         if "ATOM" not in response.text:
             raise ValueError("RCSB did not return a PDB structure.")
+        self._pdb_cache[normalized] = response.text
         return response.text
+
+    def get_known_structure(self, pdb_id: str) -> str:
+        """Backward-compatible alias for RCSB PDB downloads."""
+        return self.get_rcsb_structure(pdb_id)
 
     def search_pubchem(self, query: str, max_results: int = 8) -> list[dict[str, Any]]:
         """Search PubChem by compound name for ligand-like terms."""

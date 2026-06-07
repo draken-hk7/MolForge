@@ -9,6 +9,7 @@ import random
 from pathlib import Path
 from typing import Any
 
+from .gnn_predictor import GNNPredictor
 from .molecule_parser import MoleculeParser
 
 try:
@@ -44,6 +45,7 @@ class PropertyPredictor:
         self.model_dir = Path(model_dir or os.getenv("MOLFORGE_MODEL_DIR", "backend/models"))
         self.deepchem_available = dc is not None
         self.model: Any | None = None
+        self.gnn = GNNPredictor(self.model_dir / "molforge_gnn.pt")
         self.mode = "deterministic-descriptor"
         if self.deepchem_available:
             self._load_deepchem_model()
@@ -61,6 +63,10 @@ class PropertyPredictor:
             ValueError: If the molecule cannot be parsed.
         """
         descriptors = self.parser.get_descriptors(smiles)
+        native_prediction = self.gnn.predict(smiles)
+        if native_prediction:
+            self.mode = "native-ai-gnn"
+            return native_prediction
         rng = random.Random(self._seed(smiles))
         values = self._descriptor_predictions(descriptors, rng)
         confidences = self._confidence_scores(descriptors, rng)

@@ -1,6 +1,7 @@
-import { Camera, Pause, RotateCw, Wand2 } from 'lucide-react';
+import { Camera, Maximize2, Minimize2, Pause, RotateCw, Wand2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useFullscreen } from '../../hooks/useFullscreen';
 import { cn } from '../../utils/classNames';
 
 const styleOptions = ['ball-stick', 'spacefill', 'wireframe'];
@@ -51,12 +52,14 @@ function styleConfig(mode) {
  * @returns {JSX.Element} 3D viewer.
  */
 export default function Viewer3D({ molblock, style = 'ball-stick' }) {
+  const fullscreenRef = useRef(null);
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
   const [viewStyle, setViewStyle] = useState(style);
   const [autoRotate, setAutoRotate] = useState(false);
   const [hoverAtom, setHoverAtom] = useState(null);
   const [viewerError, setViewerError] = useState('');
+  const { isFullscreen, exitFullscreen, toggleFullscreen } = useFullscreen(fullscreenRef);
 
   const renderMolecule = useCallback(async () => {
     if (!containerRef.current) {
@@ -102,6 +105,11 @@ export default function Viewer3D({ molblock, style = 'ball-stick' }) {
     }
   }, [autoRotate]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => viewerRef.current?.resize(), 80);
+    return () => window.clearTimeout(timer);
+  }, [isFullscreen]);
+
   const handleStyle = (mode) => {
     setViewStyle(mode);
     if (viewerRef.current) {
@@ -122,7 +130,17 @@ export default function Viewer3D({ molblock, style = 'ball-stick' }) {
   };
 
   return (
-    <section className="glass-panel overflow-hidden rounded-2xl">
+    <section
+      ref={fullscreenRef}
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+          event.preventDefault();
+          toggleFullscreen();
+        }
+      }}
+      className={cn('glass-panel overflow-hidden rounded-2xl bg-[#0a0a0f] outline-none', isFullscreen && 'flex h-screen w-screen flex-col rounded-none')}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
         <div>
           <h2 className="text-lg font-medium text-white">3D Structure</h2>
@@ -160,9 +178,27 @@ export default function Viewer3D({ molblock, style = 'ball-stick' }) {
           >
             <Camera size={16} />
           </button>
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition hover:border-indigo-400/50 hover:text-white"
+            title="Fullscreen (F)"
+          >
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+          {isFullscreen && (
+            <button
+              type="button"
+              onClick={exitFullscreen}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-400/30 bg-red-500/10 text-red-200"
+              title="Exit fullscreen"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
-      <div className="relative h-[400px] min-h-[320px] w-full bg-[#0a0a0f]">
+      <div className={cn('relative h-[400px] min-h-[320px] w-full bg-[#0a0a0f]', isFullscreen && 'min-h-0 flex-1')}>
         <div ref={containerRef} className="absolute inset-0" />
         {!molblock && (
           <div className="absolute inset-0 grid place-items-center px-6 text-center">

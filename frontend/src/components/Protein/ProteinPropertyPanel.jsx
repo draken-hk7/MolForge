@@ -12,7 +12,7 @@ export default function ProteinPropertyPanel({ properties, analysis, method }) {
   const composition = Object.entries(properties.amino_acid_composition || {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
-  const source = method === 'esmfold' ? 'ESMFold' : method === 'rcsb' ? 'UniProt Known Structure' : method === 'mock' ? 'Mock Structure' : 'Sequence Analysis';
+  const source = method === 'esmfold' ? 'ESMFold' : method === 'rcsb_experimental' ? 'RCSB Experimental Structure' : 'Sequence Analysis';
 
   return (
     <section className="glass-panel rounded-2xl p-4">

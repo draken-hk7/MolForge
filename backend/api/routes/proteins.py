@@ -20,6 +20,7 @@ class SequenceRequest(BaseModel):
     """Single protein sequence request."""
 
     sequence: str = Field(..., min_length=1)
+    uniprot_id: str | None = None
 
 
 class CompareRequest(BaseModel):
@@ -50,8 +51,12 @@ async def predict(payload: SequenceRequest, request: Request) -> dict[str, Any]:
     try:
         predictor = _predictor(request)
         properties = predictor.get_sequence_properties(payload.sequence)
-        structure = predictor.predict_structure(payload.sequence)
-        analysis = _analyzer(request).analyze_pdb(structure["pdb_string"], predicted=structure["method"] in {"esmfold", "mock"})
+        structure = predictor.predict_structure(payload.sequence, payload.uniprot_id)
+        analysis = (
+            _analyzer(request).analyze_pdb(structure["pdb_string"], predicted=structure["method"] == "esmfold")
+            if structure.get("pdb_string")
+            else None
+        )
         return {**structure, "properties": properties, "analysis": analysis}
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -87,19 +92,7 @@ async def get_structure(uniprot_id: str, request: Request) -> dict[str, Any]:
     client = _uniprot(request)
     try:
         record = client.get_by_id(uniprot_id)
-        if record["known_structures"]:
-            pdb_id = record["known_structures"][0]
-            pdb_string = client.get_known_structure(pdb_id)
-            analysis = _analyzer(request).analyze_pdb(pdb_string, predicted=False)
-            return {
-                "pdb_string": pdb_string,
-                "method": "rcsb",
-                "source_id": pdb_id,
-                "properties": _predictor(request).get_sequence_properties(record["sequence"]),
-                "analysis": analysis,
-                "uniprot": record,
-            }
-        predicted = await predict(SequenceRequest(sequence=record["sequence"]), request)
+        predicted = await predict(SequenceRequest(sequence=record["sequence"], uniprot_id=uniprot_id), request)
         predicted["uniprot"] = record
         return predicted
     except (ValueError, RuntimeError) as exc:
@@ -117,7 +110,7 @@ async def status(request: Request) -> dict[str, Any]:
         "message": (
             "ESMFold ready."
             if predictor.available
-            else "ESMFold available - add HF_API_KEY to enable hosted prediction. Sequence analysis and mock rendering remain available."
+            else "ESMFold available - add HF_API_KEY to enable hosted prediction. RCSB lookup and sequence analysis remain available."
         ),
     }
 

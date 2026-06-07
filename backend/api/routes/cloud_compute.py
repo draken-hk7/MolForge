@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from api.routes.auth import optional_user, require_user
 from core.cloud_compute.job_manager import CloudJobManager, CloudRateLimitError
 from core.telemetry import track
+from core.training_pipeline import TrainingPipelineManager
 
 
 router = APIRouter(prefix="/api/cloud", tags=["cloud-compute"])
@@ -26,8 +27,23 @@ class Batch(BaseModel):
     smiles_list: list[str] = Field(..., min_length=1, max_length=100)
 
 
+class TrainingRun(BaseModel):
+    limit: int | None = Field(None, ge=1, le=200000)
+
+
 def manager(request: Request) -> CloudJobManager:
     return getattr(request.app.state, "cloud_job_manager", None) or CloudJobManager()
+
+
+def training_pipeline(request: Request) -> TrainingPipelineManager:
+    return getattr(request.app.state, "training_pipeline", None) or TrainingPipelineManager()
+
+
+def require_admin(request: Request, authorization: str | None) -> dict[str, Any]:
+    user = require_user(request, authorization)
+    if user["profile"].get("tier") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required.")
+    return user
 
 
 @router.post("/submit")
@@ -87,6 +103,28 @@ async def precomputed(smiles_hash: str, request: Request) -> dict[str, Any]:
 @router.get("/stats")
 async def cloud_stats(request: Request) -> dict[str, Any]:
     return manager(request).stats()
+
+
+@router.get("/training-runs")
+async def training_runs(request: Request, authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
+    require_admin(request, authorization)
+    return training_pipeline(request).list_runs()
+
+
+@router.post("/training/{action}")
+async def start_training_run(
+    action: str,
+    payload: TrainingRun,
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    user = require_admin(request, authorization)
+    try:
+        result = training_pipeline(request).start(action, payload.limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    track(user["id"], "training_pipeline_started", {"action": action, "limit": payload.limit})
+    return result
 
 
 @router.get("/jobs")

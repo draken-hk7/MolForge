@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 import hashlib
+import json
+from pathlib import Path
 from threading import Lock, Thread
 import uuid
 from typing import Any
@@ -17,6 +19,7 @@ from core.telemetry import capture_exception, track
 
 
 TIER_DAILY_LIMITS = {"free": 3, "early_access": 20, "plus": 100, "max": None, "admin": None}
+ROOT = Path(__file__).resolve().parents[3]
 
 
 class CloudRateLimitError(RuntimeError):
@@ -202,7 +205,52 @@ class CloudJobManager:
             "cache_hit_rate": cache["cache_hit_rate"],
             "average_calculation_time_s": round(sum(durations) / len(durations), 2) if durations else 0.0,
             "providers_available": self.providers(),
+            "training_data": self.training_data_stats(),
+            "benchmark_history": self.benchmark_history(),
         }
+
+    def training_data_stats(self) -> dict[str, Any]:
+        """Return privacy-safe training sample counts from Supabase or local checkpoints."""
+        if self.gateway.service_available:
+            try:
+                stats = self.gateway.rpc("training_data_stats", {})
+                if isinstance(stats, dict):
+                    return stats
+            except Exception as exc:
+                capture_exception(exc, {"operation": "training_data_stats"})
+        by_source: dict[str, int] = {}
+        checkpoint = ROOT / "ml" / "datasets" / "qm9_import_checkpoint.json"
+        if checkpoint.exists():
+            try:
+                by_source["qm9_dataset"] = int(json.loads(checkpoint.read_text(encoding="utf-8")).get("imported", 0))
+            except Exception:
+                pass
+        xtb_results = ROOT / "ml" / "datasets" / "xtb_results.json"
+        if xtb_results.exists():
+            try:
+                by_source["xtb_batch"] = len(json.loads(xtb_results.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+        return {"total": sum(by_source.values()), "by_source": by_source}
+
+    def benchmark_history(self, limit: int = 12) -> list[dict[str, Any]]:
+        """Load compact benchmark summaries for the admin accuracy trend."""
+        reports = []
+        for path in sorted((ROOT / "ml" / "benchmarks").glob("benchmark_*.json"), reverse=True)[:limit]:
+            try:
+                result = json.loads(path.read_text(encoding="utf-8"))
+                reports.append(
+                    {
+                        "timestamp": path.stem.removeprefix("benchmark_"),
+                        "ml_accuracy": result.get("ml_accuracy"),
+                        "xtb_accuracy": result.get("xtb_accuracy"),
+                        "n_molecules": result.get("n_molecules", 0),
+                        "per_property": result.get("per_property", {}),
+                    }
+                )
+            except Exception:
+                continue
+        return list(reversed(reports))
 
     def recent_jobs(self, user_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
         jobs = [job for job in reversed(list(self.jobs.values())) if user_id is None or job.get("user_id") == user_id]

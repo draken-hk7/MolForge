@@ -1,7 +1,8 @@
-import { Camera, Loader2, Pause, RotateCw, ScanLine } from 'lucide-react';
+import { Camera, Loader2, Maximize2, Minimize2, Pause, RotateCcw, RotateCw, ScanLine, X } from 'lucide-react';
 import * as NGL from 'ngl';
 import { useEffect, useRef, useState } from 'react';
 
+import { useFullscreen } from '../../hooks/useFullscreen';
 import { cn } from '../../utils/classNames';
 
 const representations = [
@@ -63,16 +64,39 @@ function nglColorScheme(mode) {
   return 'resname';
 }
 
-export default function ProteinViewer3D({ pdbString, method = 'mock' }) {
+const methodBadges = {
+  rcsb_experimental: {
+    label: 'Experimentally Verified',
+    className: 'border-blue-400/30 bg-blue-500/10 text-blue-200',
+    title: 'Structure from RCSB PDB experimental X-ray or Cryo-EM data'
+  },
+  esmfold: {
+    label: 'AI Predicted (ESMFold)',
+    className: 'border-teal-400/30 bg-teal-500/10 text-teal-200',
+    title: 'AI-predicted protein structure from ESMFold'
+  },
+  unavailable: {
+    label: 'Structure Unavailable',
+    className: 'border-slate-400/30 bg-slate-500/10 text-slate-300',
+    title: 'Sequence analysis is available while structure services reconnect'
+  }
+};
+
+export default function ProteinViewer3D({ pdbString, method = '', onRetry }) {
+  const fullscreenRef = useRef(null);
   const containerRef = useRef(null);
   const stageRef = useRef(null);
   const componentRef = useRef(null);
-  const [representation, setRepresentation] = useState(method === 'mock' ? 'ball+stick' : 'cartoon');
+  const [representation, setRepresentation] = useState('cartoon');
   const [colorScheme, setColorScheme] = useState('structure');
   const [spinning, setSpinning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hover, setHover] = useState('');
   const [error, setError] = useState('');
+  const [retrySeconds, setRetrySeconds] = useState(30);
+  const { isFullscreen, exitFullscreen, toggleFullscreen } = useFullscreen(fullscreenRef);
+  const unavailable = method === 'unavailable';
+  const methodBadge = methodBadges[method];
 
   useEffect(() => {
     registerColorSchemes();
@@ -124,8 +148,30 @@ export default function ProteinViewer3D({ pdbString, method = 'mock' }) {
   }, [spinning]);
 
   useEffect(() => {
-    setRepresentation(method === 'mock' ? 'ball+stick' : 'cartoon');
+    const timer = window.setTimeout(() => stageRef.current?.handleResize(), 80);
+    return () => window.clearTimeout(timer);
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    setRepresentation('cartoon');
   }, [method]);
+
+  useEffect(() => {
+    if (!unavailable || !onRetry) {
+      setRetrySeconds(30);
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      setRetrySeconds((seconds) => {
+        if (seconds <= 1) {
+          onRetry();
+          return 30;
+        }
+        return seconds - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [onRetry, unavailable]);
 
   const takeScreenshot = async () => {
     const blob = await stageRef.current?.makeImage({ factor: 2, antialias: true, trim: true });
@@ -136,11 +182,24 @@ export default function ProteinViewer3D({ pdbString, method = 'mock' }) {
   };
 
   return (
-    <section className="glass-panel overflow-hidden rounded-2xl">
+    <section
+      ref={fullscreenRef}
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+          event.preventDefault();
+          toggleFullscreen();
+        }
+      }}
+      className={cn('glass-panel overflow-hidden rounded-2xl bg-[#0a0a0f] outline-none', isFullscreen && 'flex h-screen w-screen flex-col rounded-none')}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
         <div>
           <h2 className="text-lg font-medium text-white">Protein Structure</h2>
-          <p className="text-xs text-slate-400">{hover || `${method === 'rcsb' ? 'Experimental PDB' : method === 'esmfold' ? 'ESMFold prediction' : 'Mock peptide fallback'} - NGL Viewer`}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p className="text-xs text-slate-400">{hover || `${method === 'rcsb_experimental' ? 'Experimental PDB' : method === 'esmfold' ? 'ESMFold prediction' : unavailable ? 'Waiting for structure service' : 'No structure loaded'} - NGL Viewer`}</p>
+            {methodBadge && <span title={methodBadge.title} className={`rounded-md border px-2 py-1 text-[10px] font-semibold ${methodBadge.className}`}>{methodBadge.label}</span>}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -167,9 +226,27 @@ export default function ProteinViewer3D({ pdbString, method = 'mock' }) {
           >
             <Camera size={16} />
           </button>
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-slate-200 hover:border-teal-400/50"
+            title="Fullscreen (F)"
+          >
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+          {isFullscreen && (
+            <button
+              type="button"
+              onClick={exitFullscreen}
+              className="grid h-9 w-9 place-items-center rounded-lg border border-red-400/30 bg-red-500/10 text-red-200"
+              title="Exit fullscreen"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
-      <div className="grid gap-2 border-b border-white/10 bg-black/15 px-4 py-3 lg:grid-cols-2">
+      {pdbString && <div className="grid gap-2 border-b border-white/10 bg-black/15 px-4 py-3 lg:grid-cols-2">
         <div className="flex flex-wrap gap-1 rounded-lg border border-white/10 bg-black/20 p-1">
           {colorSchemes.map((option) => (
             <button
@@ -194,15 +271,35 @@ export default function ProteinViewer3D({ pdbString, method = 'mock' }) {
             </button>
           ))}
         </div>
-      </div>
-      <div className="relative h-[450px] min-h-[360px] bg-[#0a0a0f]">
+      </div>}
+      <div className={cn('relative h-[450px] min-h-[360px] bg-[#0a0a0f]', isFullscreen && 'min-h-0 flex-1')}>
         <div ref={containerRef} className="absolute inset-0" />
-        {!pdbString && (
+        {!pdbString && !unavailable && (
           <div className="absolute inset-0 grid place-items-center px-6 text-center">
             <div>
               <ScanLine className="mx-auto mb-3 text-teal-300" size={32} />
               <div className="font-medium text-slate-300">No structure loaded</div>
               <p className="mt-1 text-sm text-slate-400">Predict a sequence or load a UniProt structure.</p>
+            </div>
+          </div>
+        )}
+        {unavailable && (
+          <div className="absolute inset-0 grid place-items-center bg-[#0a0a0f] px-6 text-center">
+            <div className="w-full max-w-md rounded-lg border border-teal-400/30 bg-teal-500/[0.06] p-6">
+              <Loader2 className="mx-auto animate-spin text-teal-300" size={34} />
+              <h3 className="mt-4 text-lg font-semibold text-white">Connecting to structure prediction service...</h3>
+              <p className="mt-2 text-sm text-slate-400">While waiting, sequence analysis is available in the panel below.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setRetrySeconds(30);
+                  onRetry?.();
+                }}
+                className="mt-5 inline-flex items-center gap-2 rounded-lg border border-teal-400/30 bg-teal-500/15 px-4 py-2 text-sm font-semibold text-teal-100 hover:bg-teal-500/25"
+              >
+                <RotateCcw size={16} /> Retry
+              </button>
+              <p className="mt-3 text-xs text-slate-500">Retrying in {retrySeconds}s...</p>
             </div>
           </div>
         )}

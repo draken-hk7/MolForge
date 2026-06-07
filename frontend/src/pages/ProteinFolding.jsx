@@ -72,7 +72,11 @@ export default function ProteinFolding() {
           <ProteinLigandSearch protein={selectedUniprotEntry || currentProtein} />
         </div>
         <div className="space-y-4">
-          <ProteinViewer3D pdbString={currentStructure?.pdb_string} method={currentStructure?.method} />
+          <ProteinViewer3D
+            pdbString={currentStructure?.pdb_string}
+            method={currentStructure?.method}
+            onRetry={currentSequence ? () => predictStructure(currentSequence) : undefined}
+          />
           {secondary && (
             <section className="glass-panel rounded-2xl p-4">
               <h2 className="mb-3 text-lg font-medium text-white">Secondary Structure</h2>
