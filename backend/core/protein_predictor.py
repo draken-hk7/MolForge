@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import math
 import os
 from typing import Any
+
+from .uniprot_client import UniProtClient
 
 try:
     import requests
@@ -18,36 +19,12 @@ except Exception:
 
 
 VALID_AMINO_ACIDS = frozenset("ACDEFGHIKLMNPQRSTVWY")
-THREE_LETTER_CODES = {
-    "A": "ALA",
-    "C": "CYS",
-    "D": "ASP",
-    "E": "GLU",
-    "F": "PHE",
-    "G": "GLY",
-    "H": "HIS",
-    "I": "ILE",
-    "K": "LYS",
-    "L": "LEU",
-    "M": "MET",
-    "N": "ASN",
-    "P": "PRO",
-    "Q": "GLN",
-    "R": "ARG",
-    "S": "SER",
-    "T": "THR",
-    "V": "VAL",
-    "W": "TRP",
-    "Y": "TYR",
-}
-
-
 class ProteinPredictor:
     """Analyze protein sequences and call the hosted ESMFold model when configured."""
 
     HF_API_URL = "https://api-inference.huggingface.co/models/facebook/esmfold_v1"
 
-    def __init__(self, api_key: str | None = None) -> None:
+    def __init__(self, api_key: str | None = None, uniprot_client: UniProtClient | None = None) -> None:
         """Initialize the predictor.
 
         Args:
@@ -58,6 +35,7 @@ class ProteinPredictor:
         """
         self.api_key = (api_key if api_key is not None else os.getenv("HF_API_KEY", "")).strip()
         self.available = bool(self.api_key) and requests is not None
+        self.uniprot_client = uniprot_client or UniProtClient()
 
     def validate_sequence(self, sequence: str) -> dict[str, Any]:
         """Validate and normalize an amino-acid sequence.
@@ -128,8 +106,8 @@ class ProteinPredictor:
             "amino_acid_composition": composition,
         }
 
-    def predict_structure(self, sequence: str) -> dict[str, Any]:
-        """Predict a structure with ESMFold or return a renderable mock structure.
+    def predict_structure(self, sequence: str, uniprot_id: str | None = None) -> dict[str, Any]:
+        """Return an RCSB structure, ESMFold prediction, or unavailable result.
 
         Args:
             sequence: Protein sequence.
@@ -144,17 +122,31 @@ class ProteinPredictor:
         if not validation["valid"]:
             raise ValueError(" ".join(validation["errors"]))
         normalized = validation["sequence"]
+        if uniprot_id:
+            for pdb_id in self.uniprot_client.find_pdb_ids(uniprot_id):
+                try:
+                    return self._structure_result(self.uniprot_client.get_rcsb_structure(pdb_id), "rcsb_experimental") | {
+                        "source_id": pdb_id
+                    }
+                except Exception:
+                    continue
         if self.available:
             try:
                 pdb_string = self._call_esmfold(normalized)
                 return self._structure_result(pdb_string, "esmfold")
             except Exception:
-                result = self._structure_result(self._mock_pdb(normalized), "mock")
-                result["warning"] = "ESMFold temporarily unavailable. Showing sequence analysis only."
-                return result
-        result = self._structure_result(self._mock_pdb(normalized), "mock")
-        result["warning"] = "HF_API_KEY is not set. Showing a generated peptide backbone."
-        return result
+                pass
+        message = "Structure prediction temporarily unavailable. Sequence analysis shown."
+        return {
+            "pdb_string": None,
+            "residue_count": 0,
+            "atom_count": 0,
+            "chain_count": 0,
+            "method": "unavailable",
+            "confidence_scores": [],
+            "message": message,
+            "warning": message,
+        }
 
     def _call_esmfold(self, sequence: str) -> str:
         """Call the hosted Hugging Face ESMFold endpoint."""
@@ -190,36 +182,6 @@ class ProteinPredictor:
             "method": method,
             "confidence_scores": confidence_scores,
         }
-
-    def _mock_pdb(self, sequence: str) -> str:
-        """Generate a simple helical peptide backbone for offline rendering."""
-        lines = [
-            "HEADER    MOLFORGE MOCK PEPTIDE",
-            f"HELIX    1   1 {THREE_LETTER_CODES[sequence[0]]:>3} A   1  {THREE_LETTER_CODES[sequence[-1]]:>3} A{len(sequence):4d}  1                                  {len(sequence):2d}",
-            "REMARK 950 GENERATED MOCK BACKBONE; NOT A STRUCTURE PREDICTION",
-        ]
-        serial = 1
-        for index, amino_acid in enumerate(sequence, start=1):
-            residue = THREE_LETTER_CODES[amino_acid]
-            angle = math.radians((index - 1) * 100)
-            ca_x = (index - 1) * 1.5
-            ca_y = 2.3 * math.cos(angle)
-            ca_z = 2.3 * math.sin(angle)
-            confidence = 55.0 + min(index % 10, 9) * 2.5
-            atoms = [
-                ("N", ca_x - 0.45, ca_y + 0.7 * math.cos(angle - 0.5), ca_z + 0.7 * math.sin(angle - 0.5), "N"),
-                ("CA", ca_x, ca_y, ca_z, "C"),
-                ("C", ca_x + 0.45, ca_y + 0.7 * math.cos(angle + 0.5), ca_z + 0.7 * math.sin(angle + 0.5), "C"),
-                ("O", ca_x + 0.75, ca_y + 1.1 * math.cos(angle + 0.7), ca_z + 1.1 * math.sin(angle + 0.7), "O"),
-            ]
-            for atom_name, x, y, z, element in atoms:
-                lines.append(
-                    f"ATOM  {serial:5d} {atom_name:^4}{residue:>4} A{index:4d}    "
-                    f"{x:8.3f}{y:8.3f}{z:8.3f}{1.00:6.2f}{confidence:6.2f}          {element:>2}"
-                )
-                serial += 1
-        lines.extend(["TER", "END"])
-        return "\n".join(lines) + "\n"
 
     def _is_float(self, value: str) -> bool:
         """Return whether a string can be parsed as a float."""

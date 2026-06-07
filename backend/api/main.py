@@ -76,9 +76,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.md_runner = MolecularDynamicsRunner(optimizer=optimizer)
     app.state.mp_client = MaterialsProjectClient()
     app.state.property_reconciler = PropertyReconciler()
-    app.state.protein_predictor = ProteinPredictor()
-    app.state.protein_analyzer = ProteinAnalyzer()
     app.state.uniprot_client = UniProtClient()
+    app.state.protein_predictor = ProteinPredictor(uniprot_client=app.state.uniprot_client)
+    app.state.protein_analyzer = ProteinAnalyzer()
     app.state.supabase = get_gateway()
     app.state.cloud_job_manager = CloudJobManager(gateway=app.state.supabase)
     yield
