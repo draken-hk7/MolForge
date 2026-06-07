@@ -22,6 +22,12 @@ npm-debug.log*
 # Models and datasets
 backend/models/graphconv_qm9/
 ml/datasets/qm9/
+ml/datasets/qm9.csv
+ml/datasets/*.part
+ml/datasets/qm9_import_checkpoint.json
+ml/datasets/xtb_results.json
+ml/benchmarks/benchmark_*.json
+ml/logs/
 
 # OS and editor
 .DS_Store

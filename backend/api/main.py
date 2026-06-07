@@ -37,6 +37,7 @@ from core.protein_predictor import ProteinPredictor
 from core.structure_optimizer import StructureOptimizer
 from core.supabase_client import get_gateway
 from core.telemetry import configure_sentry
+from core.training_pipeline import TrainingPipelineManager
 from core.uniprot_client import UniProtClient
 
 
@@ -81,6 +82,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.protein_analyzer = ProteinAnalyzer()
     app.state.supabase = get_gateway()
     app.state.cloud_job_manager = CloudJobManager(gateway=app.state.supabase)
+    app.state.training_pipeline = TrainingPipelineManager()
     yield
 
 

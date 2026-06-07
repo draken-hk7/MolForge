@@ -23,6 +23,11 @@ const badges = {
     label: 'Cloud DFT',
     style: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-200',
     tooltip: 'Cloud DFT: Higher-level quantum calculation. Accuracy depends on method, basis, geometry, and target property.'
+  },
+  native_ai_gnn: {
+    label: 'Native AI',
+    style: 'border-amber-400/30 bg-amber-500/10 text-amber-200',
+    tooltip: 'MolForge Native GNN model trained on 200k+ molecules. Approximately 85% accurate on supported benchmark domains.'
   }
 };
 
@@ -31,7 +36,8 @@ const aliases = {
   cloud_xtb: 'xtb',
   cloud_xtb_derived: 'derived',
   cloud_dft: 'dft',
-  materials_project: 'mp'
+  materials_project: 'mp',
+  native_ai: 'native_ai_gnn'
 };
 
 export default function AccuracyBadge({ source = 'ml', method = '', note = '' }) {
