@@ -4,14 +4,30 @@ function fullscreenElement() {
   return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
 }
 
-function requestFullscreen(element) {
+async function requestFullscreen(element) {
   const request = element?.requestFullscreen || element?.webkitRequestFullscreen || element?.mozRequestFullScreen || element?.msRequestFullscreen;
-  return request ? request.call(element) : Promise.reject(new Error('Fullscreen is not supported by this browser.'));
+  if (!request) {
+    return false;
+  }
+  try {
+    await request.call(element);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-function leaveFullscreen() {
+async function leaveFullscreen() {
   const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-  return exit ? exit.call(document) : Promise.resolve();
+  if (!exit) {
+    return false;
+  }
+  try {
+    await exit.call(document);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function useFullscreen(elementRef) {
