@@ -79,6 +79,17 @@ def test_predict_without_key() -> None:
     assert "ATOM" in result["pdb_string"]
 
 
+def test_predict_connection_error_returns_safe_warning(monkeypatch) -> None:
+    """Hosted prediction connection errors should not expose raw exception details."""
+    predictor = ProteinPredictor(api_key="configured-token")
+    monkeypatch.setattr(predictor, "_call_esmfold", lambda _sequence: (_ for _ in ()).throw(ConnectionError("DNS lookup failed")))
+
+    result = predictor.predict_structure("ACDEFG")
+
+    assert result["method"] == "mock"
+    assert result["warning"] == "ESMFold temporarily unavailable. Showing sequence analysis only."
+
+
 def test_mock_prediction_uses_three_dimensional_backbone() -> None:
     """The offline fallback should form a visible helix instead of a straight line."""
     pdb_string = ProteinPredictor(api_key="").predict_structure("ACDEFGHIK")["pdb_string"]

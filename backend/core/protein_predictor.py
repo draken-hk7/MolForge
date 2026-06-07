@@ -148,9 +148,9 @@ class ProteinPredictor:
             try:
                 pdb_string = self._call_esmfold(normalized)
                 return self._structure_result(pdb_string, "esmfold")
-            except Exception as exc:
+            except Exception:
                 result = self._structure_result(self._mock_pdb(normalized), "mock")
-                result["warning"] = f"ESMFold prediction unavailable: {exc}"
+                result["warning"] = "ESMFold temporarily unavailable. Showing sequence analysis only."
                 return result
         result = self._structure_result(self._mock_pdb(normalized), "mock")
         result["warning"] = "HF_API_KEY is not set. Showing a generated peptide backbone."
